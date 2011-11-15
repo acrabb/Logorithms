@@ -1,0 +1,177 @@
+<html>
+<head>
+<title>logo_primitives.py</title>
+</head>
+
+<body>
+<h3>logo_primitives.py (<a href="logo_primitives.py">plain text</a>)</h3>
+<hr>
+<pre>
+<span style="color: darkred">"""The logo_primitives module contains definitions of Logo primitive procedures.
+
+Note: Some additional primitive procedures are defined in logo.py.
+"""
+
+</span><span style="color: blue; font-weight: bold">import </span>operator as op
+<span style="color: blue; font-weight: bold">import </span>logo
+<span style="color: blue; font-weight: bold">from </span>buffer <span style="color: blue; font-weight: bold">import </span>Buffer
+
+<span style="color: blue; font-weight: bold">try</span><span style="font-weight: bold">:
+    </span><span style="color: blue; font-weight: bold">import </span>turtle
+<span style="color: blue; font-weight: bold">except </span>Exception as e<span style="font-weight: bold">:
+    </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span><span style="color: red">'Cannot import turtle graphics:'</span><span style="font-weight: bold">, </span>e<span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>logo_print<span style="font-weight: bold">(</span>x<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Implements Logo "print" primitive."""
+    </span>logo<span style="font-weight: bold">.</span>logo_type<span style="font-weight: bold">(</span>x<span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span><span style="color: red">''</span><span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>logo_show<span style="font-weight: bold">(</span>x<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Implements Logo "show" primitive."""
+    </span><span style="color: blue; font-weight: bold">if </span>type<span style="font-weight: bold">(</span>x<span style="font-weight: bold">) == </span>list<span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span><span style="color: red">'['</span><span style="font-weight: bold">, </span>end<span style="font-weight: bold">=</span><span style="color: red">''</span><span style="font-weight: bold">)
+    </span>logo<span style="font-weight: bold">.</span>logo_type<span style="font-weight: bold">(</span>x<span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">if </span>type<span style="font-weight: bold">(</span>x<span style="font-weight: bold">) == </span>list<span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span><span style="color: red">']'</span><span style="font-weight: bold">, </span>end<span style="font-weight: bold">=</span><span style="color: red">''</span><span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span><span style="color: red">''</span><span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>repeat<span style="font-weight: bold">(</span>n<span style="font-weight: bold">, </span>exp<span style="font-weight: bold">, </span>env<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Implements "repeat", which evaluates an exp, n times."""
+    </span><span style="color: blue; font-weight: bold">for </span>_ <span style="color: blue; font-weight: bold">in </span>range<span style="font-weight: bold">(</span>int<span style="font-weight: bold">(</span>n<span style="font-weight: bold">)):
+        </span>logo<span style="font-weight: bold">.</span>eval_line<span style="font-weight: bold">(</span>Buffer<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">), </span>env<span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">return </span><span style="color: blue">None
+
+</span><span style="color: blue; font-weight: bold">def </span>logo_word<span style="font-weight: bold">(</span>x<span style="font-weight: bold">, </span>y<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Implements "word", which applies string addition and evaluation."""
+    </span><span style="color: blue; font-weight: bold">if </span>type<span style="font-weight: bold">(</span>x<span style="font-weight: bold">) == </span>list <span style="color: blue; font-weight: bold">or </span>type<span style="font-weight: bold">(</span>y<span style="font-weight: bold">) == </span>list<span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">raise </span>logo<span style="font-weight: bold">.</span>LogoError<span style="font-weight: bold">(</span><span style="color: red">'Cannot take a sentence input.'</span><span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">return </span>x <span style="font-weight: bold">+ </span>y
+
+<span style="color: blue; font-weight: bold">def </span>logo_sentence<span style="font-weight: bold">(</span>x<span style="font-weight: bold">, </span>y<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Implements "sentence", which builds a list (sentence) from two lists,
+    converting non-list inputs to lists first."""
+    </span><span style="color: blue; font-weight: bold">if </span>type<span style="font-weight: bold">(</span>x<span style="font-weight: bold">) != </span>list<span style="font-weight: bold">:
+        </span>x <span style="font-weight: bold">= [</span>x<span style="font-weight: bold">]
+    </span><span style="color: blue; font-weight: bold">if </span>type<span style="font-weight: bold">(</span>y<span style="font-weight: bold">) != </span>list<span style="font-weight: bold">:
+        </span>y <span style="font-weight: bold">= [</span>y<span style="font-weight: bold">]
+    </span><span style="color: blue; font-weight: bold">return </span>x <span style="font-weight: bold">+ </span>y
+
+<span style="color: blue; font-weight: bold">def </span>logo_list<span style="font-weight: bold">(</span>x<span style="font-weight: bold">, </span>y<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Implements "list", which constructs a list (sentence) from two
+    elements."""
+    </span><span style="color: blue; font-weight: bold">return </span><span style="font-weight: bold">[</span>x<span style="font-weight: bold">, </span>y<span style="font-weight: bold">]
+
+</span><span style="color: blue; font-weight: bold">def </span>logo_fput<span style="font-weight: bold">(</span>x<span style="font-weight: bold">, </span>y<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Implements "fput", which constructs a list (sentence) from an element
+    and the rest of the list."""
+    </span><span style="color: blue; font-weight: bold">if </span>type<span style="font-weight: bold">(</span>y<span style="font-weight: bold">) != </span>list<span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">raise </span>logo<span style="font-weight: bold">.</span>LogoError<span style="font-weight: bold">(</span><span style="color: red">'Second input must be a sentence.'</span><span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">return </span><span style="font-weight: bold">[</span>x<span style="font-weight: bold">] + </span>y
+
+<span style="color: blue; font-weight: bold">def </span>numeric<span style="font-weight: bold">(</span>f<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Return a Logo primitive that has numeric inputs and output."""
+    </span><span style="color: blue; font-weight: bold">def </span>coerced<span style="font-weight: bold">(*</span>args<span style="font-weight: bold">):
+        </span>result <span style="font-weight: bold">= </span>f<span style="font-weight: bold">(*</span>map<span style="font-weight: bold">(</span>to_num<span style="font-weight: bold">, </span>args<span style="font-weight: bold">))
+        </span><span style="color: blue; font-weight: bold">if </span>result <span style="color: blue; font-weight: bold">is not </span><span style="color: blue">None</span><span style="font-weight: bold">:
+            </span><span style="color: blue; font-weight: bold">return </span>str<span style="font-weight: bold">(</span>result<span style="font-weight: bold">) 
+    </span><span style="color: blue; font-weight: bold">return </span>coerced
+
+<span style="color: blue; font-weight: bold">def </span>logical<span style="font-weight: bold">(</span>f<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Return a Logo primitive that has boolean inputs and output."""
+    </span><span style="color: blue; font-weight: bold">def </span>coerced<span style="font-weight: bold">(*</span>args<span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return </span>str<span style="font-weight: bold">(</span>f<span style="font-weight: bold">(*</span>tuple<span style="font-weight: bold">(</span>map<span style="font-weight: bold">(</span>to_bool<span style="font-weight: bold">, </span>args<span style="font-weight: bold">))))
+    </span><span style="color: blue; font-weight: bold">return </span>coerced
+
+<span style="color: blue; font-weight: bold">def </span>to_num<span style="font-weight: bold">(</span>s<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Coerce string s to a number."""
+    </span><span style="color: blue; font-weight: bold">try</span><span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">return </span>int<span style="font-weight: bold">(</span>s<span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">except </span><span style="font-weight: bold">(</span>TypeError<span style="font-weight: bold">, </span>ValueError<span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">try</span><span style="font-weight: bold">:
+            </span><span style="color: blue; font-weight: bold">return </span>float<span style="font-weight: bold">(</span>s<span style="font-weight: bold">)
+        </span><span style="color: blue; font-weight: bold">except </span><span style="font-weight: bold">(</span>TypeError<span style="font-weight: bold">, </span>ValueError<span style="font-weight: bold">):
+            </span><span style="color: blue; font-weight: bold">raise </span>logo<span style="font-weight: bold">.</span>error<span style="font-weight: bold">(</span>str<span style="font-weight: bold">(</span>s<span style="font-weight: bold">) + </span><span style="color: red">' is not a number'</span><span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>to_bool<span style="font-weight: bold">(</span>s<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Coerce string s to a bool."""
+    </span><span style="color: blue; font-weight: bold">if </span>s <span style="font-weight: bold">== </span><span style="color: red">'True'</span><span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">return True
+    if </span>s <span style="font-weight: bold">== </span><span style="color: red">'False'</span><span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">return False
+    raise </span>logo<span style="font-weight: bold">.</span>error<span style="font-weight: bold">(</span>str<span style="font-weight: bold">(</span>s<span style="font-weight: bold">) + </span><span style="color: red">' is not a boolean value'</span><span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>equal<span style="font-weight: bold">(</span>x<span style="font-weight: bold">, </span>y<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Return True if x and y are equal."""
+    </span><span style="color: blue; font-weight: bold">if </span>x <span style="font-weight: bold">== </span>y<span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">return </span><span style="color: red">'True'
+    </span><span style="color: blue; font-weight: bold">try</span><span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">return </span>str<span style="font-weight: bold">(</span>float<span style="font-weight: bold">(</span>x<span style="font-weight: bold">) == </span>float<span style="font-weight: bold">(</span>y<span style="font-weight: bold">))
+    </span><span style="color: blue; font-weight: bold">except </span><span style="font-weight: bold">(</span>TypeError<span style="font-weight: bold">, </span>ValueError<span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return </span><span style="color: red">'False'
+
+</span><span style="color: blue; font-weight: bold">def </span>load<span style="font-weight: bold">(</span>make_primitive<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Extend the set of primitive Logo procedures."""
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'first'</span><span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">, </span><span style="color: blue; font-weight: bold">lambda </span>l<span style="font-weight: bold">: </span>l<span style="font-weight: bold">[</span><span style="color: red">0</span><span style="font-weight: bold">])
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'butfirst'</span><span style="font-weight: bold">, </span><span style="color: red">'bf'</span><span style="font-weight: bold">], </span><span style="color: red">1</span><span style="font-weight: bold">, </span><span style="color: blue; font-weight: bold">lambda </span>l<span style="font-weight: bold">: </span>l<span style="font-weight: bold">[</span><span style="color: red">1</span><span style="font-weight: bold">:])
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'last'</span><span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">, </span><span style="color: blue; font-weight: bold">lambda </span>l<span style="font-weight: bold">: </span>l<span style="font-weight: bold">[-</span><span style="color: red">1</span><span style="font-weight: bold">])
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'butlast'</span><span style="font-weight: bold">, </span><span style="color: red">'bl'</span><span style="font-weight: bold">], </span><span style="color: red">1</span><span style="font-weight: bold">, </span><span style="color: blue; font-weight: bold">lambda </span>l<span style="font-weight: bold">: </span>l<span style="font-weight: bold">[:-</span><span style="color: red">1</span><span style="font-weight: bold">])
+
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'sum'</span><span style="font-weight: bold">, </span><span style="color: red">2</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>op<span style="font-weight: bold">.</span>add<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'difference'</span><span style="font-weight: bold">, </span><span style="color: red">2</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>op<span style="font-weight: bold">.</span>sub<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'product'</span><span style="font-weight: bold">, </span><span style="color: red">2</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>op<span style="font-weight: bold">.</span>mul<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'div'</span><span style="font-weight: bold">, </span><span style="color: red">'quotient'</span><span style="font-weight: bold">], </span><span style="color: red">2</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>op<span style="font-weight: bold">.</span>truediv<span style="font-weight: bold">))
+
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'equalp'</span><span style="font-weight: bold">, </span><span style="color: red">'eq'</span><span style="font-weight: bold">, </span><span style="color: red">'equal?'</span><span style="font-weight: bold">], </span><span style="color: red">2</span><span style="font-weight: bold">, </span>equal<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'lessp'</span><span style="font-weight: bold">, </span><span style="color: red">'lt'</span><span style="font-weight: bold">, </span><span style="color: red">'less?'</span><span style="font-weight: bold">], </span><span style="color: red">2</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>op<span style="font-weight: bold">.</span>lt<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'greaterp'</span><span style="font-weight: bold">, </span><span style="color: red">'gp'</span><span style="font-weight: bold">, </span><span style="color: red">'greater?'</span><span style="font-weight: bold">], </span><span style="color: red">2</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>op<span style="font-weight: bold">.</span>gt<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'emptyp'</span><span style="font-weight: bold">, </span><span style="color: red">'empty?'</span><span style="font-weight: bold">], </span><span style="color: red">1</span><span style="font-weight: bold">, </span><span style="color: blue; font-weight: bold">lambda </span>x<span style="font-weight: bold">: </span>str<span style="font-weight: bold">(</span>len<span style="font-weight: bold">(</span>x<span style="font-weight: bold">) == </span><span style="color: red">0</span><span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'listp'</span><span style="font-weight: bold">, </span><span style="color: red">'list?'</span><span style="font-weight: bold">], </span><span style="color: red">1</span><span style="font-weight: bold">, </span><span style="color: blue; font-weight: bold">lambda </span>x<span style="font-weight: bold">: </span>str<span style="font-weight: bold">(</span>type<span style="font-weight: bold">(</span>x<span style="font-weight: bold">) == </span>list<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'wordp'</span><span style="font-weight: bold">, </span><span style="color: red">'word?'</span><span style="font-weight: bold">], </span><span style="color: red">1</span><span style="font-weight: bold">, </span><span style="color: blue; font-weight: bold">lambda </span>x<span style="font-weight: bold">: </span>str<span style="font-weight: bold">(</span>type<span style="font-weight: bold">(</span>x<span style="font-weight: bold">) == </span>str<span style="font-weight: bold">))
+
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'or'</span><span style="font-weight: bold">, </span><span style="color: red">2</span><span style="font-weight: bold">, </span>logical<span style="font-weight: bold">(</span><span style="color: blue; font-weight: bold">lambda </span>x<span style="font-weight: bold">, </span>y<span style="font-weight: bold">: </span>bool<span style="font-weight: bold">(</span>x <span style="color: blue; font-weight: bold">or </span>y<span style="font-weight: bold">)))
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'and'</span><span style="font-weight: bold">, </span><span style="color: red">2</span><span style="font-weight: bold">, </span>logical<span style="font-weight: bold">(</span><span style="color: blue; font-weight: bold">lambda </span>x<span style="font-weight: bold">, </span>y<span style="font-weight: bold">: </span>bool<span style="font-weight: bold">(</span>x <span style="color: blue; font-weight: bold">and </span>y<span style="font-weight: bold">)))
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'not'</span><span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">, </span>logical<span style="font-weight: bold">(</span><span style="color: blue; font-weight: bold">lambda </span>x<span style="font-weight: bold">: </span><span style="color: blue; font-weight: bold">not </span>x<span style="font-weight: bold">))
+
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'print'</span><span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">, </span>logo_print<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'show'</span><span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">, </span>logo_show<span style="font-weight: bold">)
+
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'repeat'</span><span style="font-weight: bold">, </span><span style="color: red">2</span><span style="font-weight: bold">, </span>repeat<span style="font-weight: bold">, </span>needs_env<span style="font-weight: bold">=</span><span style="color: blue; font-weight: bold">True</span><span style="font-weight: bold">)
+
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'word'</span><span style="font-weight: bold">, </span><span style="color: red">2</span><span style="font-weight: bold">, </span>logo_word<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'sentence'</span><span style="font-weight: bold">, </span><span style="color: red">'se'</span><span style="font-weight: bold">], </span><span style="color: red">2</span><span style="font-weight: bold">, </span>logo_sentence<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'list'</span><span style="font-weight: bold">, </span><span style="color: red">2</span><span style="font-weight: bold">, </span>logo_list<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'fput'</span><span style="font-weight: bold">, </span><span style="color: red">2</span><span style="font-weight: bold">, </span>logo_fput<span style="font-weight: bold">)
+
+    </span>load_turtle_graphics<span style="font-weight: bold">(</span>make_primitive<span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>turtle_speed<span style="font-weight: bold">(</span>n<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Set turtle graphics to draw every n frames (default: 1)."""
+    </span>turtle<span style="font-weight: bold">.</span>tracer<span style="font-weight: bold">(</span>n<span style="font-weight: bold">, </span><span style="color: red">0</span><span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>load_turtle_graphics<span style="font-weight: bold">(</span>make_primitive<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Extend the set of primitive Logo procedures with turtle graphics.
+
+    See http://docs.python.org/py3k/library/turtle.html for details on what
+    these procedures do.
+    """
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'forward'</span><span style="font-weight: bold">, </span><span style="color: red">'fd'</span><span style="font-weight: bold">], </span><span style="color: red">1</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>turtle<span style="font-weight: bold">.</span>fd<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'backward'</span><span style="font-weight: bold">, </span><span style="color: red">'back'</span><span style="font-weight: bold">, </span><span style="color: red">'bk'</span><span style="font-weight: bold">], </span><span style="color: red">1</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>turtle<span style="font-weight: bold">.</span>bk<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'right'</span><span style="font-weight: bold">, </span><span style="color: red">'rt'</span><span style="font-weight: bold">], </span><span style="color: red">1</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>turtle<span style="font-weight: bold">.</span>rt<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'left'</span><span style="font-weight: bold">, </span><span style="color: red">'lt'</span><span style="font-weight: bold">], </span><span style="color: red">1</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>turtle<span style="font-weight: bold">.</span>lt<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'circle'</span><span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>turtle<span style="font-weight: bold">.</span>circle<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'setpos'</span><span style="font-weight: bold">, </span><span style="color: red">'setposition'</span><span style="font-weight: bold">, </span><span style="color: red">'goto'</span><span style="font-weight: bold">], </span><span style="color: red">2</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>turtle<span style="font-weight: bold">.</span>goto<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'seth'</span><span style="font-weight: bold">, </span><span style="color: red">'setheading'</span><span style="font-weight: bold">], </span><span style="color: red">1</span><span style="font-weight: bold">, </span>numeric<span style="font-weight: bold">(</span>turtle<span style="font-weight: bold">.</span>seth<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'penup'</span><span style="font-weight: bold">, </span><span style="color: red">'pu'</span><span style="font-weight: bold">], </span><span style="color: red">0</span><span style="font-weight: bold">, </span>turtle<span style="font-weight: bold">.</span>up<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'pendown'</span><span style="font-weight: bold">, </span><span style="color: red">'pd'</span><span style="font-weight: bold">], </span><span style="color: red">0</span><span style="font-weight: bold">, </span>turtle<span style="font-weight: bold">.</span>down<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'showturtle'</span><span style="font-weight: bold">, </span><span style="color: red">'st'</span><span style="font-weight: bold">], </span><span style="color: red">0</span><span style="font-weight: bold">, </span>turtle<span style="font-weight: bold">.</span>showturtle<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">([</span><span style="color: red">'hideturtle'</span><span style="font-weight: bold">, </span><span style="color: red">'ht'</span><span style="font-weight: bold">], </span><span style="color: red">0</span><span style="font-weight: bold">, </span>turtle<span style="font-weight: bold">.</span>hideturtle<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'clear'</span><span style="font-weight: bold">, </span><span style="color: red">0</span><span style="font-weight: bold">, </span>turtle<span style="font-weight: bold">.</span>clear<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'color'</span><span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">, </span>turtle<span style="font-weight: bold">.</span>color<span style="font-weight: bold">)  </span><span style="color: green; font-style: italic"># accepts strings, e.g., 'red'
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'begin_fill'</span><span style="font-weight: bold">, </span><span style="color: red">0</span><span style="font-weight: bold">, </span>turtle<span style="font-weight: bold">.</span>begin_fill<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'end_fill'</span><span style="font-weight: bold">, </span><span style="color: red">0</span><span style="font-weight: bold">, </span>turtle<span style="font-weight: bold">.</span>end_fill<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'exitonclick'</span><span style="font-weight: bold">, </span><span style="color: red">0</span><span style="font-weight: bold">, </span>turtle<span style="font-weight: bold">.</span>exitonclick<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'speed'</span><span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">, </span>turtle_speed<span style="font-weight: bold">)
+</span>
+</pre>
+</body>
+</html>

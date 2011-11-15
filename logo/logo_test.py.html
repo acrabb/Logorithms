@@ -1,0 +1,68 @@
+<html>
+<head>
+<title>logo_test.py</title>
+</head>
+
+<body>
+<h3>logo_test.py (<a href="logo_test.py">plain text</a>)</h3>
+<hr>
+<pre>
+<span style="color: green; font-style: italic">#!/usr/bin/env python3
+
+</span><span style="color: darkred">"""Unit testing framework for the Logo interpreter.
+
+Usage: python3 logo_test.py FILE
+
+Interprets FILE as Logo source code, and compares each line of printed output to
+an expected output described in a comment.  For example,
+
+print 2+3
+; expect 5
+
+Differences between printed and expected outputs are printed with line numbers.
+"""
+
+</span><span style="color: blue; font-weight: bold">import </span>io
+<span style="color: blue; font-weight: bold">import </span>sys
+<span style="color: blue; font-weight: bold">from </span>ucb <span style="color: blue; font-weight: bold">import </span>main
+<span style="color: blue; font-weight: bold">from </span>logo <span style="color: blue; font-weight: bold">import </span>Environment<span style="font-weight: bold">, </span>read_eval_loop<span style="font-weight: bold">, </span>strip_comment
+
+<span style="color: blue; font-weight: bold">def </span>summarize<span style="font-weight: bold">(</span>output<span style="font-weight: bold">, </span>expected_output<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Summarize results of running tests."""
+    </span>num_failed<span style="font-weight: bold">, </span>num_expected <span style="font-weight: bold">= </span><span style="color: red">0</span><span style="font-weight: bold">, </span>len<span style="font-weight: bold">(</span>expected_output<span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">for </span><span style="font-weight: bold">(</span>actual<span style="font-weight: bold">, (</span>expected<span style="font-weight: bold">, </span>line_number<span style="font-weight: bold">)) </span><span style="color: blue; font-weight: bold">in </span>zip<span style="font-weight: bold">(</span>output<span style="font-weight: bold">, </span>expected_output<span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">if </span>actual <span style="font-weight: bold">!= </span>expected<span style="font-weight: bold">:
+            </span>num_failed <span style="font-weight: bold">+= </span><span style="color: red">1
+            </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span><span style="color: red">'test failed at line {0}'</span><span style="font-weight: bold">.</span>format<span style="font-weight: bold">(</span>line_number<span style="font-weight: bold">))
+            </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span><span style="color: red">'  expected: {0}'</span><span style="font-weight: bold">.</span>format<span style="font-weight: bold">(</span>expected<span style="font-weight: bold">))
+            </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span><span style="color: red">'   printed: {0}'</span><span style="font-weight: bold">.</span>format<span style="font-weight: bold">(</span>actual<span style="font-weight: bold">))
+    </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span><span style="color: red">'{0} tested; {1} failed.'</span><span style="font-weight: bold">.</span>format<span style="font-weight: bold">(</span>num_expected<span style="font-weight: bold">, </span>num_failed<span style="font-weight: bold">))
+
+</span>EXPECT_STRING <span style="font-weight: bold">= </span><span style="color: red">'; expect'
+
+</span>@main
+<span style="color: blue; font-weight: bold">def </span>run_tests<span style="font-weight: bold">(</span>src_file <span style="font-weight: bold">= </span><span style="color: red">'tests.logo'</span><span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Run a read-eval loop that reads from src_file and collects outputs."""
+    </span>line_number<span style="font-weight: bold">, </span>expected_output <span style="font-weight: bold">= </span><span style="color: red">0</span><span style="font-weight: bold">, []
+
+    </span><span style="color: blue; font-weight: bold">def </span>pop_line<span style="font-weight: bold">(</span>src <span style="font-weight: bold">= </span>open<span style="font-weight: bold">(</span>src_file<span style="font-weight: bold">)):
+        </span><span style="color: darkred">"""Return the next line of src."""
+        </span>nonlocal line_number
+        line_number <span style="font-weight: bold">+= </span><span style="color: red">1
+        </span>line <span style="font-weight: bold">= </span>src<span style="font-weight: bold">.</span>readline<span style="font-weight: bold">()
+        </span><span style="color: blue; font-weight: bold">if </span>line<span style="font-weight: bold">.</span>lstrip<span style="font-weight: bold">().</span>startswith<span style="font-weight: bold">(</span>EXPECT_STRING<span style="font-weight: bold">):
+            </span>expected <span style="font-weight: bold">= </span>line<span style="font-weight: bold">.</span>split<span style="font-weight: bold">(</span>EXPECT_STRING<span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">)[</span><span style="color: red">1</span><span style="font-weight: bold">][</span><span style="color: red">1</span><span style="font-weight: bold">:-</span><span style="color: red">1</span><span style="font-weight: bold">]
+            </span>expected_output<span style="font-weight: bold">.</span>append<span style="font-weight: bold">((</span>expected<span style="font-weight: bold">, </span>line_number<span style="font-weight: bold">))
+        </span><span style="color: blue; font-weight: bold">if not </span>line<span style="font-weight: bold">:
+            </span><span style="color: blue; font-weight: bold">raise </span>EOFError
+        <span style="color: blue; font-weight: bold">return </span>strip_comment<span style="font-weight: bold">(</span>line<span style="font-weight: bold">)
+
+    </span>sys<span style="font-weight: bold">.</span>stdout <span style="font-weight: bold">= </span>io<span style="font-weight: bold">.</span>StringIO<span style="font-weight: bold">()   </span><span style="color: green; font-style: italic"># Substitute stdout to collect output
+    </span>read_eval_loop<span style="font-weight: bold">(</span>Environment<span style="font-weight: bold">(</span>pop_line<span style="font-weight: bold">), </span>pop_line<span style="font-weight: bold">) 
+    </span>output <span style="font-weight: bold">= </span>sys<span style="font-weight: bold">.</span>stdout<span style="font-weight: bold">.</span>getvalue<span style="font-weight: bold">().</span>split<span style="font-weight: bold">(</span><span style="color: red">'\n'</span><span style="font-weight: bold">)
+    </span>sys<span style="font-weight: bold">.</span>stdout <span style="font-weight: bold">= </span>sys<span style="font-weight: bold">.</span>__stdout__  <span style="color: green; font-style: italic"># Revert stdout
+    </span>summarize<span style="font-weight: bold">(</span>output<span style="font-weight: bold">, </span>expected_output<span style="font-weight: bold">)
+</span>
+</pre>
+</body>
+</html>

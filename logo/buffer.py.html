@@ -1,0 +1,78 @@
+<html>
+<head>
+<title>buffer.py</title>
+</head>
+
+<body>
+<h3>buffer.py (<a href="buffer.py">plain text</a>)</h3>
+<hr>
+<pre>
+<span style="color: darkred">"""The buffer module implements a Buffer class for iterating through a list."""
+
+</span><span style="color: blue; font-weight: bold">class </span>Buffer<span style="font-weight: bold">(</span>object<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""A Buffer tracks an index into a list and provides elements sequentially.
+
+    The tracked index (initialized to 0) is incremented with each call to pop().
+    Attempts to access an element for an index that is out of range return None.
+
+    &gt;&gt;&gt; buf = Buffer(['print', '2'])
+    &gt;&gt;&gt; buf.current
+    'print'
+    &gt;&gt;&gt; buf.previous  # value is None for index -1
+    &gt;&gt;&gt; print(buf)
+    [  &gt;&gt; print, 2 ]
+    &gt;&gt;&gt; buf.pop()
+    'print'
+    &gt;&gt;&gt; print(buf)
+    [ print &gt;&gt; 2 ]
+    &gt;&gt;&gt; buf.pop()
+    '2'
+    &gt;&gt;&gt; buf.current  # value is None for index 2
+    &gt;&gt;&gt; buf.previous
+    '2'
+    &gt;&gt;&gt; print(buf)
+    [ print, 2 &gt;&gt;  ]
+    """
+    </span><span style="color: blue; font-weight: bold">def </span>__init__<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>elements<span style="font-weight: bold">, </span>index<span style="font-weight: bold">=</span><span style="color: red">0</span><span style="font-weight: bold">):
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>contents <span style="font-weight: bold">= </span>list<span style="font-weight: bold">(</span>elements<span style="font-weight: bold">)
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>index <span style="font-weight: bold">= </span>index
+
+    <span style="color: blue; font-weight: bold">def </span>pop<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span><span style="color: darkred">"""Remove the first element of the buffer and return it."""
+        </span><span style="color: blue; font-weight: bold">if </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>index <span style="font-weight: bold">&gt; </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>_maxindex<span style="font-weight: bold">():
+            </span><span style="color: blue; font-weight: bold">raise </span>IndexError<span style="font-weight: bold">(</span><span style="color: red">"Nothing left to pop"</span><span style="font-weight: bold">)
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>index <span style="font-weight: bold">+= </span><span style="color: red">1
+        </span><span style="color: blue; font-weight: bold">return </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>previous
+
+    @property
+    <span style="color: blue; font-weight: bold">def </span>previous<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span><span style="color: darkred">"""Return the previous element, or None if none exists."""
+        </span><span style="color: blue; font-weight: bold">if </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>index <span style="font-weight: bold">== </span><span style="color: red">0 </span><span style="color: blue; font-weight: bold">or </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>_maxindex<span style="font-weight: bold">() &lt; </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>index <span style="font-weight: bold">- </span><span style="color: red">1</span><span style="font-weight: bold">:
+            </span><span style="color: blue; font-weight: bold">return </span><span style="color: blue">None
+        </span><span style="color: blue; font-weight: bold">return </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>contents<span style="font-weight: bold">[</span><span style="color: blue">self</span><span style="font-weight: bold">.</span>index <span style="font-weight: bold">- </span><span style="color: red">1</span><span style="font-weight: bold">]
+
+    </span>@property
+    <span style="color: blue; font-weight: bold">def </span>current<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span><span style="color: darkred">"""Return the current element, or None if none exists."""
+        </span><span style="color: blue; font-weight: bold">if </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>_maxindex<span style="font-weight: bold">() &lt; </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>index<span style="font-weight: bold">:
+            </span><span style="color: blue; font-weight: bold">return </span><span style="color: blue">None
+        </span><span style="color: blue; font-weight: bold">return </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>contents<span style="font-weight: bold">[</span><span style="color: blue">self</span><span style="font-weight: bold">.</span>index<span style="font-weight: bold">]
+
+    </span><span style="color: blue; font-weight: bold">def </span>_maxindex<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return </span>len<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">.</span>contents<span style="font-weight: bold">) - </span><span style="color: red">1
+
+    </span><span style="color: blue; font-weight: bold">def </span>__str__<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span><span style="color: darkred">"""Return a list-like string, marking the current element with &gt;&gt;."""
+        </span>s <span style="font-weight: bold">= </span><span style="color: red">'[ '
+        </span>s <span style="font-weight: bold">+= </span><span style="color: red">', '</span><span style="font-weight: bold">.</span>join<span style="font-weight: bold">(</span>map<span style="font-weight: bold">(</span>str<span style="font-weight: bold">, </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>contents<span style="font-weight: bold">[:</span><span style="color: blue">self</span><span style="font-weight: bold">.</span>index<span style="font-weight: bold">]))
+        </span>s <span style="font-weight: bold">+= </span><span style="color: red">' &gt;&gt; '
+        </span>s <span style="font-weight: bold">+= </span><span style="color: red">', '</span><span style="font-weight: bold">.</span>join<span style="font-weight: bold">(</span>map<span style="font-weight: bold">(</span>str<span style="font-weight: bold">, </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>contents<span style="font-weight: bold">[</span><span style="color: blue">self</span><span style="font-weight: bold">.</span>index<span style="font-weight: bold">:]))
+        </span>s <span style="font-weight: bold">+= </span><span style="color: red">' ]'
+        </span><span style="color: blue; font-weight: bold">return </span>s
+
+    <span style="color: blue; font-weight: bold">def </span>__repr__<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return </span><span style="color: red">'Buffer({0}, {1})'</span><span style="font-weight: bold">.</span>format<span style="font-weight: bold">(</span>repr<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">.</span>contents<span style="font-weight: bold">), </span>repr<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">.</span>index<span style="font-weight: bold">))
+</span>
+</pre>
+</body>
+</html>

@@ -1,0 +1,745 @@
+<html>
+<head>
+<link href="css/projects.css" rel="stylesheet" type="text/css">
+<title>Logo</title>
+</head>
+
+<body>
+<h2>Project 4: A Logo Interpreter</h2>
+
+<blockquote>
+<center>
+  <img src="money_tree.png">
+</center>
+  <p><cite><center>Eval calls apply,<br>
+  which just calls eval again!<br>
+  When does it all end?</center></cite></p>
+</blockquote>
+
+<h3>Introduction</h3>
+
+<p>In this project, you will develop an interpreter for the Logo language. As
+you proceed, think about the issues that arise in the design of a programming
+language; many quirks of languages are the byproduct of implementation
+decisions in interpreters and compilers.</p>
+
+<p>You will also implement some small programs in Logo, including the
+<code>count_change</code> function that we studied in lecture.  Logo is a simple
+but powerful functional language.  You should find that much of what you have
+learned about Python transfers cleanly to other programming languages as well.
+To learn more about Logo, you can read <a
+  href="http://www.cs.berkeley.edu/~bh/v1-toc2.html">Brian Harvey's
+  textbooks</a> online for free.</p>
+
+<p>This project concludes with an open-ended graphics contest that challenges
+you to produce recursive images in only a few lines of Logo.  As an example of
+what you might create, the picture above abstractly depicts all the ways of
+making change for $0.50 using U.S. currency.  All flowers appear at the end of
+a branch with length 50. Small angles in a branch indicate an additional coin,
+while large angles indicate a new currency denomination.  In the contest, you
+too will have the chance to unleash your inner recursive artist.</p>
+
+<p>This project includes several files, but all of your changes will be made to
+the first three: <code><a href="logo.py.html">logo.py</a></code>, <code><a
+    href="tests.lg">tests.lg</a></code>, and <code><a
+    href="contest.lg">contest.lg</a></code>. You can download all of the
+project code as a <a href="logo.zip">zip archive</a>.</p>
+
+<table cellpadding="10">
+  <tr>
+    <td><code><a href="logo.py.html">logo.py</a></code></td>
+    <td>The Logo evaluator
+    </td>
+  </tr>
+  <tr>
+    <td><code><a href="tests.lg">tests.lg</a></code></td>
+    <td>Logo examples and expected output for your interpreter</td>
+  </tr>
+  <tr>
+    <td><code><a href="contest.lg">contest.lg</a></code></td>
+    <td>A place to write your contest entry</td>
+  </tr>
+  <tr>
+    <td><code><a href="logo_parser.py.html">logo_parser.py</a></code></td>
+    <td>The Logo parser</td>
+  </tr>
+  <tr>
+    <td><code><a href="logo_primitives.py.html">logo_primitives.py</a></code></td>
+    <td>Defines primitive Logo procedures via the Python Library</td>
+  </tr>
+  <tr>
+    <td><code><a href="logo_test.py.html">logo_test.py</a></code></td>
+    <td>A testing framework for Logo</td>
+  </tr>
+  <tr>
+    <td><code><a href="buffer.py.html">buffer.py</a></code></td>
+    <td>A <code>Buffer</code> is a list that tracks an indexed position</td>
+  </tr>
+  <tr>
+    <td><code><a href="ucb.py.html">ucb.py</a></code></td>
+    <td>Utility functions for 61A</td>
+  </tr>
+</table>
+
+<h3>Logistics</h3>
+
+<p>This is a three-part project. As in the previous projects, you'll work in a
+team of two people, person A and person B. In each part, you will do some of
+the work separately, but most questions can be completed as a pair. Both
+partners should understand the solutions to all questions.
+
+<p>After completing the first part, you will be able to evaluate primitive
+procedures with constant arguments. In the second part, you will add variables
+and user-defined procedures.  In the third part, you will write Logo
+programs.</p>
+
+<p>There are 30 possible points, along with 4 extra credit points. The extra
+credit problems are not much more difficult than the normal problems; we
+recommend that you complete them all. In addition, participants in the Logo
+contest can earn up to 3 additional points, along with the glory of
+victory.</p>
+
+<h3>The Logo Language</h3>
+
+<p>Before you begin working on the project, review what you have learned in
+lecture about the <a
+  href="http://wla.berkeley.edu/~cs61a/fa11/lectures/interpretation.html#id20">Logo
+  language</a>. If you would like to experiment with a working Logo
+interpreter, try out <a
+  href="http://www.cs.berkeley.edu/~bh/logo.html">UCBLogo</a>, which is
+installed on instructional machines as <code>logo</code>.</p>  
+
+<p>The following key features of Logo will influence on your interpreter
+design.</p>
+
+<p><b>Call Expressions.</b> Logo procedures are called by listing the procedure
+name, followed by its arguments.  Logo call expressions have no parentheses or
+commas to delimit arguments; only white space separates tokens.  The Logo
+prompt is a question mark.
+
+<div class="code" data-lang="logo">
+  ? print 2
+  2
+</div>
+
+<p>The starter code for your Logo interpreter in <code><a href="logo.py.html">logo.py</a></code> can
+successfully evaluate this simple expression, because it has only one argument,
+which is a number.  The rest of the examples in this section <i>will not</i>
+work until you complete various portions of the project.</p> 
+
+<p>Despite their lack of punctuation, call expressions can be nested.  That is,
+the arguments in a call expression can themselves be call expressions.  Part of
+the Logo interpreter's job will be to figure out where each expression begins
+and ends. </p> 
+
+<div class="code" data-lang="logo">
+  ? print sum 2 3
+  5
+</div>
+
+<p>The interpreter identifies the end of a call expression by knowing the
+number of arguments needed by each procedure.  The <code>print</code> procedure
+requires one argument, while the <code>sum</code> procedure requires two.</p> 
+
+<p>Reading nested Logo expressions can take some practice, and mentally
+inserting punctuation can aid understanding.  For instance, the Logo expression
+
+<div class="code" data-lang="logo">
+  ? print sum product sum 1 2 3 4
+  13
+</div>
+
+is equivalent to the Python expression <code>print(add(mul(add(1, 2), 3),
+  4))</code>.
+
+
+<p><b>Read-Eval Loop.</b> Unlike Python, the result of evaluating an expression
+is not automatically printed.  Instead, Logo complains if the value of any
+top-level expression is not <code>None</code>.</p>
+
+<div class="code" data-lang="logo">
+  ? 2
+  You do not say what to do with 2.
+</div>
+  
+<p>In Logo, any top-level expression (i.e., an expression that is not an
+operand of another expression) must evaluate to <code>None</code>. The
+<code>print</code> procedure always outputs <code>None</code>, and so printing
+does not cause an error.  Multiple call expressions may appear on the same line
+of Logo, and the interpreter will evaluate each one. When a top-level
+expression evaluates to a non-<code>None</code> value, the remaining
+expressions on the line are ignored.</p> 
+
+<div class="code" data-lang="logo">
+  ? print 1 2
+  1
+  You do not say what to do with 2.
+  ? 1 print 2
+  You do not say what to do with 1.
+</div>
+
+
+<p><b>Infix Notation.</b> In addition to prefix-notation call expressions,
+Logo includes seven infix operators: +, -, *, /, =, &gt;, &lt;.
+
+<div class="code" data-lang="logo">
+  ? print 2 + 3
+  5
+  ? print (word "re "deliver) = (word "rede "liver)
+  True
+</div>
+
+<p>Each operator corresponds to a primitive procedure that takes two arguments
+(e.g., + corresponds to <code>sum</code>). </p>
+
+
+<p><b>Quotation.</b> Logo has only two built-in data types: words and
+sentences.  Words are like strings without spaces, and also serve as the names
+of variables.  Sentences are like immutable Python lists, which can contain
+words or other sentences as elements. Logo sentences are also called lists.</p> 
+
+<p>Words that represent numbers and boolean values are self-evaluating and are
+interpreted as word literals. Any token can be interpretered as a word literal
+if it is preceded (but not followed) by a double quote. Sentence literals are
+contained in square brackets.</p>
+
+<div class="code" data-lang="logo">
+  ? print "hello
+  hello
+  ? print [hi there]
+  hi there
+</div>
+
+<p>When a sentence is printed, the delimiting square brackets are omitted so
+that the result looks more natural. Logo is meant to be conversational. </p>
+
+<p>Words and sentence literals are <i>quoted</i> expressions: their contents
+isn't evaluated.  Without the quotation mark, <code>hello</code> would be
+treated as a procedure name!</p>
+
+<div class="code" data-lang="logo">
+  ? print hello
+  I do not know how to hello.
+</div>
+
+<p>Quoted words serve as arguments to other procedures. Sentences are
+quoted, in the sense that their contents is not evaluated either.  Don't get
+confused by Logo's syntax -- these quotation marks are not used in pairs; a
+single one is used before a single word.</p>
+
+<div class="code" data-lang="logo">
+  ? print "hi there
+  hi
+  I do not know how to there.
+</div>
+
+<p>This example combines several of these concepts, along with the primitive
+procedures <code>word</code> and <code>sentence</code>:</p>
+
+<div class="code" data-lang="logo">
+  ? print sentence word "now "here last [the invisible man]
+  nowhere man
+</div>
+
+<p>Logo must understand that <code>word</code> requires two arguments (the
+quoted words that follow it) while <code>last</code> requires one, and that the
+values returned by <code>word</code> and <code>last</code> are the two required
+arguments to <code>sentence</code>.</p>
+
+
+<h3>Testing</h3>
+
+<p>The file <code>tests.lg</code> contains definitions of several Logo
+procedures that you can examine and test to become more familiar with the
+language. Each line that prints output is followed by the expected result as a
+comment. Tests are labeled with the problems to which they correspond.</p>
+  
+<p>You can run all commands in a file using your Logo interpreter by passing
+the file name as an argument to <code><a href="logo.py.html">logo.py</a></code>.
+
+<div class="code">
+  # python3 logo.py tests.lg
+</div>
+
+You can also compare the output of your interpreter to the expected output by
+passing the file name to <code><a href="logo_test.py.html">logo_test.py</a></code>.
+
+<div class="code">
+  # python3 logo_test.py tests.lg
+</div>
+
+Don't forget to use the <code>trace</code> decorator from the <code>ucb</code>
+module to follow the path of execution in your interpreter.</p> 
+
+<p>As you develop your Logo interpreter, you will find that Python raises
+various uncaught exceptions when evaluating Logo expressions.  As a result,
+your Logo interpreter will crash. By the end of the project, the only
+exceptions raised should be <code>LogoError</code> and
+<code>SyntaxError</code>, which are caught and printed by the Logo read-eval
+loop.
+
+
+<h3>Part 1: The Evaluator</h3>
+
+<p>With your partner, read the first section of <code><a href="logo.py.html">logo.py</a></code>, labeled
+<code>Evaluator</code>, and trace the flow of the evaluator. You will find that
+the call graph below is incomplete in your starter implementation; the dotted
+lines indicate missing function calls. The <code>collect_args</code>
+implementation does not correctly call <code>logo_eval</code> and the
+<code>logo_apply</code> implementation does not correctly call
+<code>eval_line</code>.
+
+<center><img src="eval_loop.png" alt="evaluator loop"></center>
+
+<p>The <code>logo_eval</code> function evaluates the first well-formed
+expression in a line of code and returns the result. The argument
+<code>line</code> is a <code>Buffer</code> object from <code><a href="buffer.py.html">buffer.py</a></code>,
+which contains a list of words and sentences. Make sure that you understand how
+a <code>Buffer</code> class works, as there are many buffers in this
+project.</p> 
+
+<p><b>Problem 1</b> (2 pt).  The function <code>collect_args</code> is
+supposed to evaluate the next <code>n</code> expressions in <code>line</code>,
+and then return their values as a list.  However, the recursive call to
+<code>logo_eval</code> is currently missing.  Instead, the provided
+implementation collects only one argument, and assumes that it is
+self-evaluating.
+
+<p>Implement <code>collect_args</code> correctly. It should make exactly
+<code>n</code> calls to <code>logo_eval</code>.  After you're finished, you
+should see the following results:</p>
+
+<div class="code">
+  ? sum 2 3
+  You do not say what to do with the result 5.
+  ? print sum 2 3
+  5
+</div>
+
+<p>Your implementation should check for errors in the input line!  If there are
+not <code>n</code> arguments available to evaluate, then call
+<code>error</code> to raise a <code>LogoError</code>. The error message should
+include <code>str(line)</code> in the result, which shows where in the input
+line the error occurred.
+
+<div class="code">
+  ? sum 2
+  Found only 1 of 2 args at [ sum, 2 >>  ]
+</div>
+
+<p><b>Problem A2</b> (2 pt). A Logo line can contain more than one call
+expression, as in the example below. However, the provided implementation of
+<code>eval_line</code> only evaluates a single expression.  The correct
+implementation should evaluate all expressions in a line.</p>
+
+<div class="code">
+  ? print 1 print 2
+  1
+  2
+  ? print 1 2
+  1
+  You do not say what to do with the result 2.
+  ? 1 print 2
+  You do not say what to do with the result 1.
+</div>
+
+<p>Implement <code>eval_line</code>, which should take a whole line as input
+(represented as a <code>Buffer</code> instance) and evaluate each expression in
+turn, but return the first value that is not <code>None</code>.  The procedure
+<code>logo_eval</code> should still do the work of evaluating the next
+expression in a line.</p>
+
+<p><i>Note</i>: <code>eval_line</code> does not need to raise or handle errors. The
+<code>interpreter_line</code> and <code>read_eval_loop</code> functions
+provided for you do that.
+
+<p><b>Problem A3</b> (2 pt). Logo can contain parentheses in its expressions
+that indicate where an sub-expression begins and ends. Fill in the
+<code>elif</code> suite in <code>logo_eval</code> when <code>token</code> is an
+open parenthesis.  For this case, <code>logo_eval</code> should call itself,
+having removed the opening parenthesis, to compute the value of the expression
+within parentheses.  Then, it should verify that a closing parenthesis follows
+immediately after the next expression.  Finally, it should remove that
+closing parenthesis and return the value of the expression within.
+
+<p><b>Problem B2</b> (2 pt). Implement <code>isquoted</code> and
+<code>text_of_quotation</code>, which together allow <code>logo_eval</code> to
+handle quoted expressions. The <code>isquoted</code> function should return
+<code>True</code> if its argument is either a list or a string that starts
+with a quotation mark.  The function <code>text_of_quotation</code> should
+return its argument stripped of its initial quotation mark if it is a string,
+or just return its argument otherwise. <i>Note</i>:
+<code>text_of_quotation</code> will only be called on values that are quoted.
+
+<p><b>Problem B3</b> (2 pt). We need to be able to print the results of Logo
+  computations. Logo provides three primitive procedures for this purpose:</p>
+
+<div class="code">
+  ? print [a [b c] d]       ; don't show outermost brackets
+  a [b c] d
+  ? show [a [b c] d]        ; do show outermost brackets
+  [a [b c] d]
+  ? type [a [b c] d]        ; don't start new line after printing
+  a [b c] d?
+</div>
+
+<p>The <code>print</code> and <code>show</code> procedures are defined in terms
+of <code>type</code> (done for you in <code><a href="logo_primitives.py.html">logo_primitives.py</a></code>). Fill in
+the Python procedure <code>logo_type</code>, which uses Python's
+<code>print</code> statement to implmement Logo's <code>type</code> procedure.
+It will take a word or sentence (or <code>None</code>) as input, and print its
+contents, putting square brackets around any sublists but not around the entire
+argument.</p>
+
+<p>Applying <code>logo_type</code> to a nested list will require a recursive
+call to <code>logo_type</code>.  The parameter <code>top_level</code> indicates
+whether the current call is the first one (<code>True</code>) or a recursive
+call (<code>False</code>).</p> 
+
+<p><b>Problem 4</b> (3 pt). Implement <code>make</code>, which is Logo's
+assignment procedure. 
+
+<p>Like Python, Logo evaluates call expressions in the context of an
+environment composed of frames.  Familiarize yourself with the
+<code>Environment</code> class in <code><a href="logo.py.html">logo.py</a></code>.
+
+<p>Certain primitive procedures need access to the current environment. For
+example, <code>make</code> takes two arguments, a variable name and a value, but
+the Python procedure that implements it, <code>logo_make</code> requires a third
+argument, the current environment, since the effect of <code>make</code> is to
+modify that environment.</p>
+
+<p>Implementing <code>make</code> will require two steps:</p>
+<ol>
+  <li>Modify <code>apply_procedure</code> so that the current environment is
+  appended to the <code>args</code> list for any <code>proc</code> that
+  has a <code>needs_env</code> attribute value of <code>True</code>.  </li>
+
+  <li>Fill in <code>Environment.set_variable_value</code> so that it adds or
+  updates a symbol-to-value binding in the global frame,
+  <code>self._frames[0]</code>. <i>Note</i>: Always changing the global frame
+  is not quite the correct behavior for Logo's <code>make</code> procedure, but
+  you will fix up this implementation later in the project. The
+  <code>set_variable_value</code> doctests will not pass until then.</li>
+</ol>
+
+<p>The provided implementation of <code>lookup_variable</code> is already
+sufficient to retrieve values from the global frame.</p>
+
+<div class="code">
+  ? make "foo 27
+  ? print :foo
+  27
+</div>
+
+<p>Why the quotation mark before <code>foo</code>? Remember, the evaluator
+would attempt to evaluate the non-existent <code>foo</code> procedure
+otherwise.</p>
+
+
+<p><b>Problem 5</b> (3 pt). The Logo primitives <code>if</code> and
+<code>ifelse</code> require as their first arguments the boolean words
+<code>True</code> or <code>False</code>. Nothing else is allowed! Predicate
+procedures must return these boolean words in order to work with
+<code>if</code>. If the first argument to <code>if</code> is <code>True</code>,
+the second argument is either evaluated if it is a sentence or returned if not.
+
+<div class="code">
+  ? if True [print 3]
+  3
+  ? if equalp 3 sum 1 2 [print sum 20 10]
+  30
+  ? ifelse lessp 2 1 [print "Yes] [print "No]
+  No
+  ? if 1 [print 3]
+  First argument to "if" is not True or False: 1
+  ? print if True 5
+  5
+  ? print if False 5
+  None
+  ? ifelse 1 2 3
+  First argument to "ifelse" is not True or False: 1
+  ? print ifelse True [sum 1 2] 4
+  3
+</div>
+
+<p>Fill in <code>logo_if</code> and <code>logo_ifelse</code> so that these
+procedures implement the behavior of Logo's <code>if</code> and
+<code>ifelse</code> primitives. Make sure to raise appropriate errors so that
+the output of your interpreter matches the output above. Call
+<code>error(message)</code> with an appropriate <code>message</code> to raise a
+<code>LogoError</code>.</p> 
+
+<p>In addition, add doctests to <code>logo_if</code> and
+<code>logo_ifelse</code> that test the result of calling <code>eval_line</code>
+on a line that contains a call to <code>if</code> or <code>ifelse</code>,
+respectively. Your doctests should check for correct error messages as well as
+the correct evaluation of a well-formed line. Make sure that your doctests
+pass.  
+
+<p><i>Hint:</i> <code>logo_if</code> is similar to <code>logo_run</code>, in
+that it evaluates the contents of the list that is passed to it.</p>
+
+<p><b>Extra Credit 1</b> (2 pt). Logo is meant to support infix operators as an
+alternate syntax for call expressions. Rewrite <code>logo_eval</code> so that
+infix expressions are evaluated correctly.
+
+<div class="code">
+  ? print 3 + 2
+  5
+  ? print 5 + ifelse 2=3 [6-4] [8/5]
+  6.6
+</div>
+
+To do so, you will need to <i>introduce</i> a helper function
+<code>eval_noninfix</code> that evaluates the first non-infix expression in a
+line (as <code>logo_eval</code> does now).  Then, you will need to update the
+<code>logo_eval</code> function with new logic.
+
+<p>Consider evaluating the expression <code>3 + 2</code>. Calling
+<code>eval_noninfix</code> will return <code>3</code>.  Your updated
+<code>logo_eval</code> function must notice that the next token of the line is
+an infix operator, <code>+</code>, find the corresponding procedure, and apply
+it (using <code>logo_apply</code>) to the already-computed value (in this case,
+<code>3</code>) and the value of the first non-infix expression after the infix
+operator (in this case, <code>2</code>).  Remember that this following
+expression might not be a single self-evaluating token; you have to evaluate
+it.</p> 
+
+To summarize, <code>logo_eval</code> should:
+
+<ul>
+  <li> Evaluate the first non-infix expression on the line and store its
+  result, for example as <code>arg0</code>. (<i>Hint</i>: use a call to
+  <code>eval_noninfix</code>, a function that you must add.)
+  <li> While the next token is an infix symbol:
+  <ul>
+    <li> Evaluate the next non-infix expression following the infix symbol (a
+    call to <code>eval_noninfix</code>).
+    <li> Apply the procedure for the infix symbol to the two values so far:
+    <code>arg0</code> and the value of the following non-infix expression.
+    <li> Update <code>arg0</code> to the result of this application.
+  </ul>
+  <li> Return the most recently computed <code>arg0</code>.
+</ul>
+
+The constant dictionary <code>INFIX_SYMBOLS</code> has the 7 Logo infix symbols
+as keys and their corresponding Logo procedure names as values.
+
+<p><b>Extra Credit 2</b> (2 pt). Handle operator precedence correctly for
+expressions that contain multiple infix operators, so that Logo obeys the
+evaluation rules of standard algebra.  Multiplication and division have
+precedence over addition and subtraction.  Moreover, these four arithmetic
+operators have precedence over the three comparison operators. The
+<code>tests.lg</code> file contains test cases for your implementation.
+
+<p>The three classes of operators are stored in a constant list called
+<code>INFIX_GROUPS</code>. 
+
+<p>Precedence can be resolved using your existing design for handling infix
+operators. Rather than always calling <code>eval_noninfix</code>, enforce that
+the right operand expression of an infix procedure may contain infix
+expressions of higher (but not lower or the same) precedence, as well as
+non-infix expressions.
+
+
+<h3>Part 2: Procedures</h3>
+
+<p>Here is a Logo procedure definition:</p>
+
+<div class="code" data-lang="logo">
+  ? to factorial :n
+  > if equal? :n 0 [output 1]
+  > output product :n factorial difference :n 1
+  > end
+  ? print factorial 5
+  120
+</div>
+
+<p>A procedure definition spans multiple lines. The procedure name and formal
+parameters are part of the header, which begins with <code>to</code>. The
+procedure body is entered on lines in response to a continuation prompt,
+<code>&gt;</code>.  The body is not evaluated immediately, but instead are
+stored as part of the procedure text.  The special keyword <code>end</code> on
+a line by itself indicates the end of the body. </p>
+
+<p>The <code>output</code> procedure is used to specify the return value of a
+user-defined procedure. Once the <code>output</code> procedure is called, the
+enclosing body is finished; in this example, if the <code>if</code> in the
+first line of the body outputs 1, the second line of the body is not evaluated.
+The <code>stop</code> procedure similarly stops procedure execution, but
+returns <code>None</code>.</p>
+
+<p><i>Warning</i>: Solutions to problems in this part of the project work
+together to implement user-defined procedures. Due to the interdependence of
+these functions, the tests in <code>tests.lg</code> for part 2 will not all
+pass until this whole part is complete. The doctests are designed to give you
+some early feedback after finishing each question.
+
+<p><b>Problem 6</b> (3 pt). Implement <code>eval_definition</code>, a function
+that takes a <code>Buffer</code> of tokens as an argument. That buffer contains
+the procedure name and formal parameter names that follow the keyword
+<code>to</code>.  To evaluate a definition:
+
+<ul>
+  <li> Enter an interactive loop in which you read lines of Logo and store them
+  as the body of the procedure. The locally defined function
+  <code>next_line</code> will prompt the user and return a parsed line of Logo.
+  This loop ends when the user enters a line that contains only the word
+  <code>end</code>. 
+  
+  <li> Finally, create a <code>Procedure</code> Python object and add it to the
+  <code>env.procedures</code> dictionary, bound to its name.
+</ul>
+
+<p><b>Problem 7</b> (4 pt). Fill in <code>logo_apply</code> so that it can apply
+user-defined procedures. The input <code>args</code> is a list of length
+<code>n+1</code>, where <code>n</code> is the number of formal parameters for
+Procedure <code>proc</code>, <code>args[:n]</code> is the list of evaluated
+arguments, and <code>args[n]</code> is the current environment. There are three
+important aspects to implementing <code>logo_apply</code>.
+
+<ul>
+  <li><b>Frames</b>: The <code>Environment</code> object has
+  <code>push_frame</code> and <code>pop_frame</code> methods. The frame that you
+  push should be a dictionary whose keys are the formal parameter names, and
+  whose values are the arguments to <code>proc</code>. That frame should be
+  popped as soon as the procedure application is complete.
+  </li>
+
+  <li><b>Lines</b>: The body <code>proc.body</code> is a list of lines. Each
+  line must be placed into a <code>Buffer</code>, then evaluated.
+  </li>
+
+  <li><b>Results</b>: The result of evaluating each line should be
+  <code>None</code>; Logo should raise an error otherwise (You do not say what
+  to do with the result). The exceptions to this rule are two primitives that
+  can end a procedure invocation early. The procedures <code>stop</code> and
+  <code>output</code> both return a pair <code>('OUTPUT', val)</code>, where
+  <code>val</code> is <code>None</code> for <code>stop</code> and an output
+  value otherwise. If applying a procedure returns such a pair, then
+  <code>logo_apply</code> should return <code>val</code>.
+  </li>
+</ul>
+
+<p><b>Problem 8</b> (2 pt). Implement <code>Environment.lookup_variable</code>
+to return the value of the first symbol-value binding in the current
+environment.  In a dynamically scoped language, all frames are added to a
+single environment. The process to look up a variable by name inspects each
+frame, starting from the most recently added, and returns the first value bound
+to that name. New frames are appended to the end of <code>self._frames</code>.
+
+<p><b>Problem 9</b> (2 pt). Modify <code>Environment.set_variable_value</code>
+so that Logo's <code>make</code> sets a variable's value in the most recent
+(innermost) frame in which it was defined, or the global frame, if it wasn't
+otherwise defined.  </p>
+
+<p>Test your work by verifying that all tests in parts 1 and 2 pass when you
+run:</p>
+
+<code>
+  # python3 logo_tests.py tests.lg
+</code>
+
+<p>Your Logo interpreter implementation is now complete.</p>
+
+
+<h3>Part 3: Recursion</h3>
+
+<p>Not only is your Logo interpreter itself a tree-recursive program, but it is
+flexible enough to evaluate <i>other</i> recursive programs. Implement the
+following procedures in Logo at the bottom of <code><a
+    href="tests.lg">tests.lg</a></code>.
+
+<p><b>Problem A10</b> (2 pt) Implement the <code>filter</code> procedure, which
+takes two arguments, a procedure name and a sentence. It outputs a sentence
+that contains all elements of the input sentence for which applying the named
+procedure outputs <code>True</code>.  <i>Hint</i>: use the <code>fput</code>
+primitive from <code><a href="logo_primitives.py.html">logo_primitives.py</a></code> to extend an existing list into
+a new list. The provided <code>apply_1</code> procedure may be useful.</p>
+
+<p><b>Problem A11</b> (2 pt). Implement the <code>count_change</code> procedure,
+which counts all of the ways to make change for a <code>total</code> amount,
+using coins with various denominations (<code>denoms</code>), but never uses
+more than <code>max_coins</code> in total.  Write your implementation in
+<code>tests.lg</code>. The procedure definition line is provided, along with
+U.S. denominations.</p>
+
+<p><b>Problem B10</b> (2 pt) Implement the <code>reduce</code> procedure, which
+takes three arguments, a procedure name, a sentence, and a starting value. It
+outputs a value that results from repeatedly applying the named procedure to
+the accumulated value and a subsequent element of the input sentence.
+<i>Hint</i>: The provided <code>apply_2</code> procedure may be useful.</p>
+
+<p><b>Problem B11</b> (2 pt). Implement the <code>count_partitions</code>
+procedure, which counts all the ways to partition a positive integer
+<code>total</code> using only pieces less than or equal to another positive
+integer <code>max_value</code>. The number <code>5</code> has 5 partitions using
+pieces up to a <code>max_value</code> of <code>3</code>:</p>
+
+<div class="code">
+  3, 2 (two pieces)
+  3, 1, 1 (three pieces)
+  2, 2, 1 (three pieces)
+  2, 1, 1, 1 (four pieces)
+  1, 1, 1, 1, 1 (ﬁve pieces)
+</div>
+
+<p><b>Problem 12</b> (3 pt). Implement the <code>list_partitions</code>
+procedure, which lists all of the ways to partition a positive integer
+<code>total</code> into at most <code>max_pieces</code> pieces that are all
+less than or equal to a positive integer <code>max_value</code>.  <i>Hint</i>:
+Define a helper function to construct partitions. The provided <code>len</code>
+procedure may be useful.</p>
+
+<p><b>Congratulations!</b> You have finished the final project for 61A. You are
+not only a rock star, but a proper computer scientist!</p> 
+
+<h3>Contest: Recursive Art</h3>
+
+<p>Logo has a number of primitive drawing procedures that are collectively
+called "turtle graphics".  The <i>turtle</i> represents the state of the drawing
+module, which has a position, an orientation, a pen state (up or down), and a
+pen color. The <code>load_turtle_graphics</code> function in
+<code><a href="logo_primitives.py.html">logo_primitives.py</a></code> lists these procedures and their
+implementations.  The Python <a
+  href="http://docs.python.org/release/3.2/library/turtle.html">documentation of
+  the turtle module</a> contains more detail.</p>
+
+<p><b>Logo Contest</b> (3 pt). Create a visualization of an iterative or
+recursive process of your choosing, using turtle graphics. Your implementation
+must be written entirely in Logo, using the interpreter you have built (no fair
+extending the interpreter to do your work in Python, but you can expose other
+turtle graphics functions from Python if you wish).
+
+<p>Prizes will be awarded for the winning entry in each of the following
+categories.  
+
+<ul>
+  <li><b>Featherweight.</b> At most 128 words of Logo, not including comments
+  and delimiters. 
+
+  <li><b>Heavyweight.</b> At most 1024 words of Logo, not including comments
+  and delimiters.
+</ul>
+
+<p>Entries (code and results) will be posted online, and winners will be
+selected by popular vote.  The voting instructions will read:
+
+<blockquote>
+Please vote for your favorite entry in this semester's 61A Recursion Exposition
+contest.  The winner should exemplify the principles of elegance, beauty, and
+abstraction that are prized in the Berkeley computer science curriculum.  As an
+academic community, we should strive to recognize and reward merit and
+achievement (translation: please don't just vote for your friends).
+</blockquote>
+
+<p>To improve your chance of success, you are welcome to include a title and
+descriptive <a href="http://en.wikipedia.org/wiki/Haiku">haiku</a> in the
+comments of your entry, which will be included in the voting.
+
+Place your completed entry into the <code><a
+    href="contest.lg">contest.lg</a></code> file.
+
+</body>
+</html>

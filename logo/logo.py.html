@@ -1,0 +1,459 @@
+<html>
+<head>
+<title>logo.py</title>
+</head>
+
+<body>
+<h3>logo.py (<a href="logo.py">plain text</a>)</h3>
+<hr>
+<pre>
+<span style="color: darkred">"""A Logo interpreter."""
+
+</span><span style="color: blue; font-weight: bold">import </span>sys
+<span style="color: blue; font-weight: bold">from </span>ucb <span style="color: blue; font-weight: bold">import </span>interact<span style="font-weight: bold">, </span>main<span style="font-weight: bold">, </span>trace
+<span style="color: blue; font-weight: bold">from </span>buffer <span style="color: blue; font-weight: bold">import </span>Buffer
+<span style="color: blue; font-weight: bold">from </span>logo_parser <span style="color: blue; font-weight: bold">import </span>parse_line
+<span style="color: blue; font-weight: bold">import </span>logo_primitives
+
+<span style="color: blue; font-weight: bold">try</span><span style="font-weight: bold">:
+    </span><span style="color: blue; font-weight: bold">import </span>readline
+<span style="color: blue; font-weight: bold">except </span>ImportError<span style="font-weight: bold">:
+    </span><span style="color: blue; font-weight: bold">pass </span><span style="color: green; font-style: italic"># Readline is not necessary; it's just a convenience
+
+#############
+# Evaluator #
+#############
+
+</span><span style="color: blue; font-weight: bold">def </span>eval_line<span style="font-weight: bold">(</span>line<span style="font-weight: bold">, </span>env<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Evaluate a line (buffer) of Logo.
+    
+    &gt;&gt;&gt; line = Buffer(parse_line('1 2'))
+    &gt;&gt;&gt; eval_line(line, Environment())
+    '1'
+    &gt;&gt;&gt; line = Buffer(parse_line('print 1 2'))
+    &gt;&gt;&gt; eval_line(line, Environment())
+    1
+    '2'
+    """
+    </span><span style="color: red">"*** YOUR CODE HERE ***"
+    </span><span style="color: blue; font-weight: bold">return </span>logo_eval<span style="font-weight: bold">(</span>line<span style="font-weight: bold">, </span>env<span style="font-weight: bold">) </span><span style="color: green; font-style: italic"># Does not handle multiple-expression lines
+
+</span><span style="color: blue; font-weight: bold">def </span>logo_eval<span style="font-weight: bold">(</span>line<span style="font-weight: bold">, </span>env<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Evaluate the first expression in a line.
+
+    &gt;&gt;&gt; line = Buffer(parse_line('sum 1 (sum 2 3)'))
+    &gt;&gt;&gt; eval_line(line, Environment())
+    '6'
+    &gt;&gt;&gt; line = Buffer(parse_line('sum 1 (sum 2 3 4)'))
+    &gt;&gt;&gt; eval_line(line, Environment())
+    Traceback (most recent call last):
+        ...
+    logo.LogoError: Expected ")" at [ sum, 1, (, sum, 2, 3 &gt;&gt; 4, ) ]
+    """
+    </span><span style="color: blue; font-weight: bold">if </span>line<span style="font-weight: bold">.</span>current <span style="font-weight: bold">== </span><span style="color: blue">None</span><span style="font-weight: bold">:
+        </span>error<span style="font-weight: bold">(</span><span style="color: red">'Ran out of input at {0}'</span><span style="font-weight: bold">.</span>format<span style="font-weight: bold">(</span>line<span style="font-weight: bold">))
+    </span><span style="color: blue; font-weight: bold">elif </span>line<span style="font-weight: bold">.</span>current <span style="font-weight: bold">== </span><span style="color: red">')'</span><span style="font-weight: bold">:
+        </span>error<span style="font-weight: bold">(</span><span style="color: red">'Unexpected ")" at {0}'</span><span style="font-weight: bold">.</span>format<span style="font-weight: bold">(</span>line<span style="font-weight: bold">))
+
+    </span>token <span style="font-weight: bold">= </span>line<span style="font-weight: bold">.</span>pop<span style="font-weight: bold">()
+    </span><span style="color: blue; font-weight: bold">if </span>isprimitive<span style="font-weight: bold">(</span>token<span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return </span>token
+    <span style="color: blue; font-weight: bold">elif </span>isvariable<span style="font-weight: bold">(</span>token<span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return </span>env<span style="font-weight: bold">.</span>lookup_variable<span style="font-weight: bold">(</span>variable_name<span style="font-weight: bold">(</span>token<span style="font-weight: bold">))
+    </span><span style="color: blue; font-weight: bold">elif </span>isdefinition<span style="font-weight: bold">(</span>token<span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return </span>eval_definition<span style="font-weight: bold">(</span>line<span style="font-weight: bold">, </span>env<span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">elif </span>isquoted<span style="font-weight: bold">(</span>token<span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return </span>text_of_quotation<span style="font-weight: bold">(</span>token<span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">elif </span>token <span style="font-weight: bold">== </span><span style="color: red">'('</span><span style="font-weight: bold">:
+        </span><span style="color: red">"*** YOUR CODE HERE ***"
+        </span><span style="color: blue; font-weight: bold">raise </span>NotImplementedError
+    <span style="color: blue; font-weight: bold">else</span><span style="font-weight: bold">:
+        </span>procedure <span style="font-weight: bold">= </span>env<span style="font-weight: bold">.</span>procedures<span style="font-weight: bold">.</span>get<span style="font-weight: bold">(</span>token<span style="font-weight: bold">, </span><span style="color: blue">None</span><span style="font-weight: bold">)
+        </span><span style="color: blue; font-weight: bold">if not </span>procedure<span style="font-weight: bold">:
+            </span>error<span style="font-weight: bold">(</span><span style="color: red">'I do not know how to {0}.'</span><span style="font-weight: bold">.</span>format<span style="font-weight: bold">(</span>token<span style="font-weight: bold">))
+        </span><span style="color: blue; font-weight: bold">return </span>apply_procedure<span style="font-weight: bold">(</span>procedure<span style="font-weight: bold">, </span>line<span style="font-weight: bold">, </span>env<span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>apply_procedure<span style="font-weight: bold">(</span>proc<span style="font-weight: bold">, </span>line<span style="font-weight: bold">, </span>env<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Evaluate the procedure named by token on the args in line."""
+    </span>args <span style="font-weight: bold">= </span>collect_args<span style="font-weight: bold">(</span>proc<span style="font-weight: bold">.</span>arg_count<span style="font-weight: bold">, </span>line<span style="font-weight: bold">, </span>env<span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">if </span>len<span style="font-weight: bold">(</span>args<span style="font-weight: bold">) &lt; </span>proc<span style="font-weight: bold">.</span>arg_count<span style="font-weight: bold">:
+        </span>error<span style="font-weight: bold">(</span><span style="color: red">'Not enough args to {0}'</span><span style="font-weight: bold">.</span>format<span style="font-weight: bold">(</span>proc<span style="font-weight: bold">.</span>name<span style="font-weight: bold">))
+    </span><span style="color: blue; font-weight: bold">return </span>logo_apply<span style="font-weight: bold">(</span>proc<span style="font-weight: bold">, </span>args<span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>collect_args<span style="font-weight: bold">(</span>n<span style="font-weight: bold">, </span>line<span style="font-weight: bold">, </span>env<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Evaluate n arguments from the line via recursive calls to logo_eval.
+    
+    &gt;&gt;&gt; line = Buffer(parse_line('2 sum 3 4'))
+    &gt;&gt;&gt; env = Environment()
+    &gt;&gt;&gt; collect_args(2, line, env)
+    ['2', '7']
+    &gt;&gt;&gt; collect_args(1, line, env)
+    Traceback (most recent call last):
+        ...
+    logo.LogoError: Found only 0 of 1 args at [ 2, sum, 3, 4 &gt;&gt;  ]
+    """
+    </span><span style="color: red">"*** YOUR CODE HERE ***"
+    </span><span style="color: blue; font-weight: bold">return </span><span style="font-weight: bold">[</span>line<span style="font-weight: bold">.</span>pop<span style="font-weight: bold">()] </span><span style="color: green; font-style: italic"># Only collects 1 arg
+
+</span><span style="color: blue; font-weight: bold">def </span>logo_apply<span style="font-weight: bold">(</span>proc<span style="font-weight: bold">, </span>args<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Apply a Logo procedure to a list of arguments.
+    
+    &gt;&gt;&gt; body = [['show', ':x'], ['output', 'sum', '1', ':x', ')'], [')']]
+    &gt;&gt;&gt; proc = Procedure('f', 1, body, needs_env=True, formal_params=['x'])
+    &gt;&gt;&gt; args = ['4', Environment()]
+    &gt;&gt;&gt; logo_apply(proc, args)
+    4
+    '5'
+    """
+    </span><span style="color: blue; font-weight: bold">if </span>proc<span style="font-weight: bold">.</span>isprimitive<span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">try</span><span style="font-weight: bold">:
+            </span><span style="color: blue; font-weight: bold">return </span>proc<span style="font-weight: bold">.</span>body<span style="font-weight: bold">(*</span>args<span style="font-weight: bold">)
+        </span><span style="color: blue; font-weight: bold">except </span>Exception as e<span style="font-weight: bold">:
+            </span>error<span style="font-weight: bold">(</span>e<span style="font-weight: bold">) </span><span style="color: green; font-style: italic"># Convert any error into a LogoError
+    </span><span style="color: blue; font-weight: bold">else</span><span style="font-weight: bold">:
+        </span><span style="color: red">"*** YOUR CODE HERE ***"
+        </span><span style="color: blue; font-weight: bold">raise </span>NotImplementedError
+
+<span style="color: blue; font-weight: bold">def </span>isoutput<span style="font-weight: bold">(</span>result<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Return whether result is a two-element tuple starting with 'OUTPUT'."""
+    </span>length_two <span style="font-weight: bold">= </span>type<span style="font-weight: bold">(</span>result<span style="font-weight: bold">) == </span>tuple <span style="color: blue; font-weight: bold">and </span>len<span style="font-weight: bold">(</span>result<span style="font-weight: bold">) == </span><span style="color: red">2
+    </span><span style="color: blue; font-weight: bold">return </span>length_two <span style="color: blue; font-weight: bold">and </span>result<span style="font-weight: bold">[</span><span style="color: red">0</span><span style="font-weight: bold">] == </span><span style="color: red">'OUTPUT'
+
+</span><span style="color: blue; font-weight: bold">def </span>isprimitive<span style="font-weight: bold">(</span>token<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Numbers, True, and False are primitive, self-evaluating tokens."""
+    </span><span style="color: blue; font-weight: bold">if </span>token <span style="color: blue; font-weight: bold">in </span><span style="font-weight: bold">(</span><span style="color: red">'True'</span><span style="font-weight: bold">, </span><span style="color: red">'False'</span><span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return True
+    try</span><span style="font-weight: bold">:
+        </span>float<span style="font-weight: bold">(</span>token<span style="font-weight: bold">)
+        </span><span style="color: blue; font-weight: bold">return True
+    except </span><span style="font-weight: bold">(</span>TypeError<span style="font-weight: bold">, </span>ValueError<span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return False
+
+def </span>isvariable<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Variables start with ":" """
+    </span><span style="color: blue; font-weight: bold">return </span>type<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">) == </span>str <span style="color: blue; font-weight: bold">and </span>exp<span style="font-weight: bold">.</span>startswith<span style="font-weight: bold">(</span><span style="color: red">':'</span><span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>variable_name<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Variable names follow the ":" """
+    </span><span style="color: blue; font-weight: bold">if </span>type<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">) != </span>str <span style="color: blue; font-weight: bold">or </span>len<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">) &lt;= </span><span style="color: red">1 </span><span style="color: blue; font-weight: bold">or </span>exp<span style="font-weight: bold">[</span><span style="color: red">0</span><span style="font-weight: bold">] != </span><span style="color: red">':'</span><span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">raise </span>ValueError<span style="font-weight: bold">(</span><span style="color: red">'Illegal variable expression {0}'</span><span style="font-weight: bold">.</span>format<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">))
+    </span><span style="color: blue; font-weight: bold">return </span>exp<span style="font-weight: bold">[</span><span style="color: red">1</span><span style="font-weight: bold">:]
+
+</span><span style="color: blue; font-weight: bold">def </span>isdefinition<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Definitions start with "to" """
+    </span><span style="color: blue; font-weight: bold">return </span>exp <span style="font-weight: bold">== </span><span style="color: red">"to"
+
+</span><span style="color: blue; font-weight: bold">def </span>isquoted<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Lists are automatically quoted, and symbols can be explicitly quoted.
+    
+    &gt;&gt;&gt; isquoted('"hello')
+    True
+    &gt;&gt;&gt; isquoted('hello')
+    False
+    &gt;&gt;&gt; isquoted([1, 2])
+    True
+    """
+    </span><span style="color: red">"*** YOUR CODE HERE ***"
+    </span><span style="color: blue; font-weight: bold">return False </span><span style="color: green; font-style: italic"># Does not detect quotation
+
+</span><span style="color: blue; font-weight: bold">def </span>text_of_quotation<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Retrieving the text of a quotation requires stripping the quote.
+    
+    &gt;&gt;&gt; text_of_quotation('"hello')
+    'hello'
+    &gt;&gt;&gt; text_of_quotation([1, 2])
+    [1, 2]
+    """
+    </span><span style="color: red">"*** YOUR CODE HERE ***"
+    </span><span style="color: blue; font-weight: bold">raise </span>NotImplementedError
+
+
+<span style="color: green; font-style: italic">########################
+# Primitive Procedures #
+########################
+
+</span><span style="color: blue; font-weight: bold">def </span>logo_type<span style="font-weight: bold">(</span>x<span style="font-weight: bold">, </span>top_level<span style="font-weight: bold">=</span><span style="color: blue; font-weight: bold">True</span><span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Apply the "type" primitive, which prints out a value x.
+    
+    &gt;&gt;&gt; logo_type(['1', '2', ['3', ['4'], '5']])
+    1 2 [3 [4] 5]
+    &gt;&gt;&gt; line = Buffer(parse_line('type [a [b c] d]'))
+    &gt;&gt;&gt; eval_line(line, Environment())
+    a [b c] d
+    """
+    </span><span style="color: blue; font-weight: bold">if </span>type<span style="font-weight: bold">(</span>x<span style="font-weight: bold">) != </span>list<span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span>x<span style="font-weight: bold">, </span>end<span style="font-weight: bold">=</span><span style="color: red">''</span><span style="font-weight: bold">) </span><span style="color: green; font-style: italic"># The end argument prevents starting a new line
+    </span><span style="color: blue; font-weight: bold">else</span><span style="font-weight: bold">:
+        </span><span style="color: red">"*** YOUR CODE HERE ***"
+        </span><span style="color: blue; font-weight: bold">raise </span>NotImplementedError
+
+<span style="color: blue; font-weight: bold">def </span>logo_run<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">, </span>env<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Apply the "run" primitive."""
+    </span><span style="color: blue; font-weight: bold">if </span>type<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">) != </span>list<span style="font-weight: bold">:
+        </span>exp <span style="font-weight: bold">= [</span>exp<span style="font-weight: bold">]
+    </span><span style="color: blue; font-weight: bold">return </span>eval_line<span style="font-weight: bold">(</span>Buffer<span style="font-weight: bold">(</span>exp<span style="font-weight: bold">), </span>env<span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>logo_if<span style="font-weight: bold">(</span>val<span style="font-weight: bold">, </span>exp<span style="font-weight: bold">, </span>env<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Apply the "if" primitive, which takes a boolean and a list.
+    
+    ***YOUR DOCTEST HERE***
+    """
+    </span><span style="color: red">"*** YOUR CODE HERE ***"
+    </span><span style="color: blue; font-weight: bold">raise </span>NotImplementedError
+
+<span style="color: blue; font-weight: bold">def </span>logo_ifelse<span style="font-weight: bold">(</span>val<span style="font-weight: bold">, </span>true_exp<span style="font-weight: bold">, </span>false_exp<span style="font-weight: bold">, </span>env<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Apply the "ifelse" primitive, which takes a boolean and two lists.
+    
+    ***YOUR DOCTEST HERE***
+    """
+    </span><span style="color: red">"*** YOUR CODE HERE ***"
+    </span><span style="color: blue; font-weight: bold">raise </span>NotImplementedError
+
+<span style="color: blue; font-weight: bold">def </span>logo_make<span style="font-weight: bold">(</span>symbol<span style="font-weight: bold">, </span>val<span style="font-weight: bold">, </span>env<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Apply the Logo make primitive, which binds a name to a value.
+    
+    &gt;&gt;&gt; line = Buffer(parse_line('make "2 3'))
+    &gt;&gt;&gt; env = Environment(None)
+    &gt;&gt;&gt; eval_line(line, env)
+    &gt;&gt;&gt; env.lookup_variable('2')
+    '3'
+    """
+    </span>env<span style="font-weight: bold">.</span>set_variable_value<span style="font-weight: bold">(</span>symbol<span style="font-weight: bold">, </span>val<span style="font-weight: bold">)
+
+</span><span style="color: green; font-style: italic"># A dict mapping infix symbols to Logo primitive procedure names.
+</span>INFIX_SYMBOLS <span style="font-weight: bold">= {</span><span style="color: red">'+'</span><span style="font-weight: bold">: </span><span style="color: red">'sum'</span><span style="font-weight: bold">,
+                 </span><span style="color: red">'-'</span><span style="font-weight: bold">: </span><span style="color: red">'difference'</span><span style="font-weight: bold">,
+                 </span><span style="color: red">'*'</span><span style="font-weight: bold">: </span><span style="color: red">'product'</span><span style="font-weight: bold">,
+                 </span><span style="color: red">'/'</span><span style="font-weight: bold">: </span><span style="color: red">'div'</span><span style="font-weight: bold">,
+                 </span><span style="color: red">'='</span><span style="font-weight: bold">: </span><span style="color: red">'equalp'</span><span style="font-weight: bold">,
+                 </span><span style="color: red">'&gt;'</span><span style="font-weight: bold">: </span><span style="color: red">'greaterp'</span><span style="font-weight: bold">,
+                 </span><span style="color: red">'&lt;'</span><span style="font-weight: bold">: </span><span style="color: red">'lessp'</span><span style="font-weight: bold">,
+                 }
+
+</span><span style="color: green; font-style: italic"># Precedence levels
+</span>INFIX_GROUPS <span style="font-weight: bold">= [[</span><span style="color: red">'&lt;'</span><span style="font-weight: bold">, </span><span style="color: red">'&gt;'</span><span style="font-weight: bold">, </span><span style="color: red">'='</span><span style="font-weight: bold">], [</span><span style="color: red">'+'</span><span style="font-weight: bold">, </span><span style="color: red">'-'</span><span style="font-weight: bold">], [</span><span style="color: red">'*'</span><span style="font-weight: bold">, </span><span style="color: red">'/'</span><span style="font-weight: bold">]]
+
+</span><span style="color: green; font-style: italic">#################################
+# Procedures and Initialization #
+#################################
+
+</span><span style="color: blue; font-weight: bold">class </span>Procedure<span style="font-weight: bold">(</span>object<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""A Logo procedure, either primitive or user-defined.
+
+    name: The name of the procedure.  For primitive procedures with multiple
+          names, only one is stored here.
+
+    arg_count: Number of arguments required by the procedure.
+
+    body: A Logo procedure body is either:
+            a Python function, if isprimitive == True
+            a list of lines,   if isprimitive == False
+
+    isprimitive: whether the procedure is primitive.
+
+    needs_env: whether the environment should be passed as an add'l parameter.
+
+    formal_params: list of formal parameter names (user-defined procedures).
+    """
+    </span><span style="color: blue; font-weight: bold">def </span>__init__<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>name<span style="font-weight: bold">, </span>arg_count<span style="font-weight: bold">, </span>body<span style="font-weight: bold">, </span>isprimitive<span style="font-weight: bold">=</span><span style="color: blue; font-weight: bold">False</span><span style="font-weight: bold">,
+                 </span>needs_env<span style="font-weight: bold">=</span><span style="color: blue; font-weight: bold">False</span><span style="font-weight: bold">, </span>formal_params<span style="font-weight: bold">=</span><span style="color: blue">None</span><span style="font-weight: bold">):
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>name <span style="font-weight: bold">= </span>name
+        <span style="color: blue">self</span><span style="font-weight: bold">.</span>arg_count <span style="font-weight: bold">= </span>arg_count
+        <span style="color: blue">self</span><span style="font-weight: bold">.</span>body <span style="font-weight: bold">= </span>body
+        <span style="color: blue">self</span><span style="font-weight: bold">.</span>isprimitive <span style="font-weight: bold">= </span>isprimitive
+        <span style="color: blue">self</span><span style="font-weight: bold">.</span>needs_env <span style="font-weight: bold">= </span>needs_env
+        <span style="color: blue; font-weight: bold">if not </span>formal_params<span style="font-weight: bold">:
+            </span>formal_params <span style="font-weight: bold">= [</span>str<span style="font-weight: bold">(</span>i<span style="font-weight: bold">) </span><span style="color: blue; font-weight: bold">for </span>i <span style="color: blue; font-weight: bold">in </span>range<span style="font-weight: bold">(</span>arg_count<span style="font-weight: bold">)]
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>formal_params <span style="font-weight: bold">= </span>formal_params
+
+    <span style="color: blue; font-weight: bold">def </span>__str__<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span>params <span style="font-weight: bold">= </span><span style="color: red">' '</span><span style="font-weight: bold">.</span>join<span style="font-weight: bold">([</span><span style="color: red">':'</span><span style="font-weight: bold">+</span>p <span style="color: blue; font-weight: bold">for </span>p <span style="color: blue; font-weight: bold">in </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>formal_params<span style="font-weight: bold">])
+        </span><span style="color: blue; font-weight: bold">return </span><span style="color: red">'to {0} {1}'</span><span style="font-weight: bold">.</span>format<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">.</span>name<span style="font-weight: bold">, </span>params<span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>load_primitives<span style="font-weight: bold">():
+    </span><span style="color: darkred">"""Load primitive Logo procedures."""
+    </span>primitives <span style="font-weight: bold">= </span>dict<span style="font-weight: bold">()
+
+    </span><span style="color: blue; font-weight: bold">def </span>make_primitive<span style="font-weight: bold">(</span>names<span style="font-weight: bold">, </span>arg_count<span style="font-weight: bold">, </span>fn<span style="font-weight: bold">, **</span>kwds<span style="font-weight: bold">):
+        </span><span style="color: darkred">"""Create primitive procedures for names."""
+        </span><span style="color: blue; font-weight: bold">if </span>type<span style="font-weight: bold">(</span>names<span style="font-weight: bold">) == </span>str<span style="font-weight: bold">:
+            </span>names <span style="font-weight: bold">= [</span>names<span style="font-weight: bold">]
+        </span>kwds<span style="font-weight: bold">[</span><span style="color: red">'isprimitive'</span><span style="font-weight: bold">] = </span><span style="color: blue; font-weight: bold">True
+        </span>procedure <span style="font-weight: bold">= </span>Procedure<span style="font-weight: bold">(</span>names<span style="font-weight: bold">[</span><span style="color: red">0</span><span style="font-weight: bold">], </span>arg_count<span style="font-weight: bold">, </span>fn<span style="font-weight: bold">, **</span>kwds<span style="font-weight: bold">)
+        </span><span style="color: blue; font-weight: bold">for </span>name <span style="color: blue; font-weight: bold">in </span>names<span style="font-weight: bold">:
+            </span>primitives<span style="font-weight: bold">[</span>name<span style="font-weight: bold">] = </span>procedure
+
+    logo_primitives<span style="font-weight: bold">.</span>load<span style="font-weight: bold">(</span>make_primitive<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'type'</span><span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">, </span>logo_type<span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'make'</span><span style="font-weight: bold">, </span><span style="color: red">2</span><span style="font-weight: bold">, </span>logo_make<span style="font-weight: bold">, </span>needs_env<span style="font-weight: bold">=</span><span style="color: blue; font-weight: bold">True</span><span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'if'</span><span style="font-weight: bold">, </span><span style="color: red">2</span><span style="font-weight: bold">, </span>logo_if<span style="font-weight: bold">, </span>needs_env<span style="font-weight: bold">=</span><span style="color: blue; font-weight: bold">True</span><span style="font-weight: bold">)
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'ifelse'</span><span style="font-weight: bold">, </span><span style="color: red">3</span><span style="font-weight: bold">, </span>logo_ifelse<span style="font-weight: bold">, </span>needs_env<span style="font-weight: bold">=</span><span style="color: blue; font-weight: bold">True</span><span style="font-weight: bold">)
+
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'output'</span><span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">, </span><span style="color: blue; font-weight: bold">lambda </span>x<span style="font-weight: bold">: (</span><span style="color: red">'OUTPUT'</span><span style="font-weight: bold">, </span>x<span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'stop'</span><span style="font-weight: bold">, </span><span style="color: red">0</span><span style="font-weight: bold">, </span><span style="color: blue; font-weight: bold">lambda</span><span style="font-weight: bold">: (</span><span style="color: red">'OUTPUT'</span><span style="font-weight: bold">, </span><span style="color: blue">None</span><span style="font-weight: bold">))
+    </span>make_primitive<span style="font-weight: bold">(</span><span style="color: red">'run'</span><span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">, </span>logo_run<span style="font-weight: bold">, </span>needs_env<span style="font-weight: bold">=</span><span style="color: blue; font-weight: bold">True</span><span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">return </span>primitives
+
+
+<span style="color: green; font-style: italic">############################################
+# Environments and User-Defined Procedures #
+############################################
+
+</span><span style="color: blue; font-weight: bold">class </span>Environment<span style="font-weight: bold">(</span>object<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""An environment holds procedure (global) and name bindings in frames."""
+    </span><span style="color: blue; font-weight: bold">def </span>__init__<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>get_continuation_line<span style="font-weight: bold">=</span><span style="color: blue">None</span><span style="font-weight: bold">):
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>get_continuation_line <span style="font-weight: bold">= </span>get_continuation_line
+        <span style="color: blue">self</span><span style="font-weight: bold">.</span>procedures <span style="font-weight: bold">= </span>load_primitives<span style="font-weight: bold">()
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>_frames <span style="font-weight: bold">= [</span>dict<span style="font-weight: bold">()] </span><span style="color: green; font-style: italic"># The first frame is the global one
+
+    </span><span style="color: blue; font-weight: bold">def </span>push_frame<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>frame<span style="font-weight: bold">):
+        </span><span style="color: darkred">"""Add a new frame, which contains new bindings."""
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>_frames<span style="font-weight: bold">.</span>append<span style="font-weight: bold">(</span>frame<span style="font-weight: bold">)
+
+    </span><span style="color: blue; font-weight: bold">def </span>pop_frame<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span><span style="color: darkred">"""Discard the last frame."""
+        </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>_frames<span style="font-weight: bold">.</span>pop<span style="font-weight: bold">()
+
+    </span><span style="color: blue; font-weight: bold">def </span>lookup_variable<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>symbol<span style="font-weight: bold">):
+        </span><span style="color: darkred">"""Look up a variable in the environment, or raise an error.
+        
+        &gt;&gt;&gt; env = Environment()
+        &gt;&gt;&gt; env.set_variable_value('x', 1)
+        &gt;&gt;&gt; env.push_frame({'x': 2, 'y': 3})
+        &gt;&gt;&gt; env.push_frame({'y': 4})
+        &gt;&gt;&gt; env.lookup_variable('y')
+        4
+        &gt;&gt;&gt; env.lookup_variable('x')
+        2
+        &gt;&gt;&gt; env.lookup_variable('z')
+        Traceback (most recent call last):
+            ...
+        logo.LogoError: z has no value
+        """
+        </span><span style="color: red">"*** YOUR CODE HERE ***"
+        </span><span style="color: blue; font-weight: bold">return </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>_frames<span style="font-weight: bold">[</span><span style="color: red">0</span><span style="font-weight: bold">][</span>symbol<span style="font-weight: bold">] </span><span style="color: green; font-style: italic"># Does not scope
+
+    </span><span style="color: blue; font-weight: bold">def </span>set_variable_value<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">, </span>symbol<span style="font-weight: bold">, </span>val<span style="font-weight: bold">):
+        </span><span style="color: darkred">"""Set the value of a variable in the innermost frame where it's defined,
+        or create it in the global frame.
+        
+        &gt;&gt;&gt; env = Environment()
+        &gt;&gt;&gt; env.set_variable_value('x', 1)
+        &gt;&gt;&gt; env.push_frame({'x': 2, 'y': 3})
+        &gt;&gt;&gt; env.set_variable_value('x', 4)
+        &gt;&gt;&gt; env.lookup_variable('x')
+        4
+        &gt;&gt;&gt; env.set_variable_value('z', 5)
+        &gt;&gt;&gt; env.lookup_variable('z')
+        5
+        &gt;&gt;&gt; env.pop_frame()
+        &gt;&gt;&gt; env.lookup_variable('x')
+        1
+        &gt;&gt;&gt; env.lookup_variable('z')
+        5
+        """
+        </span><span style="color: red">"*** YOUR CODE HERE ***"
+        </span><span style="color: blue; font-weight: bold">raise </span>NotImplementedError
+
+    <span style="color: blue; font-weight: bold">def </span>__str__<span style="font-weight: bold">(</span><span style="color: blue">self</span><span style="font-weight: bold">):
+        </span><span style="color: blue; font-weight: bold">return </span><span style="color: red">';'</span><span style="font-weight: bold">.</span>join<span style="font-weight: bold">([</span>str<span style="font-weight: bold">(</span>f<span style="font-weight: bold">) </span><span style="color: blue; font-weight: bold">for </span>f <span style="color: blue; font-weight: bold">in </span><span style="color: blue">self</span><span style="font-weight: bold">.</span>_frames<span style="font-weight: bold">])
+
+
+</span><span style="color: blue; font-weight: bold">def </span>eval_definition<span style="font-weight: bold">(</span>line<span style="font-weight: bold">, </span>env<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Evaluate a definition and create a corresponding procedure.
+
+    line: The definition line, following "to", of the multi-line definition.
+
+    Hint: create a user-defined Procedure object using
+      Procedure(name, len(params), body, formal_params=params, needs_env=True)
+        - name is a string defining the procedure name
+        - body is a list of lists representing Logo sentences (one per line)
+        - params is a list of strings naming each formal parameter
+        - needs_env is always True
+
+    &gt;&gt;&gt; to_line = Buffer(parse_line('to double :n'))
+    &gt;&gt;&gt; body = ['output sum :n :n\\n', 'end']
+    &gt;&gt;&gt; env = Environment(generate_lines(body, '&gt;'))
+    &gt;&gt;&gt; eval_line(to_line, env)
+    &gt; output sum :n :n
+    &gt; end
+    &gt;&gt;&gt; print(env.procedures['double'])
+    to double :n
+    &gt;&gt;&gt; env.procedures['double'].needs_env
+    True
+    &gt;&gt;&gt; env.procedures['double'].body
+    [['output', 'sum', ':n', ':n']]
+    """
+    </span>procedure_name <span style="font-weight: bold">= </span>line<span style="font-weight: bold">.</span>pop<span style="font-weight: bold">()
+    </span>next_line <span style="font-weight: bold">= </span><span style="color: blue; font-weight: bold">lambda</span><span style="font-weight: bold">: </span>parse_line<span style="font-weight: bold">(</span>env<span style="font-weight: bold">.</span>get_continuation_line<span style="font-weight: bold">())
+    </span><span style="color: red">"*** YOUR CODE HERE ***"
+    </span><span style="color: blue; font-weight: bold">raise </span>NotImplementedError
+
+
+<span style="color: green; font-style: italic">###############
+# Interpreter #
+###############
+
+</span><span style="color: blue; font-weight: bold">class </span>LogoError<span style="font-weight: bold">(</span>Exception<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""An error raised by the Logo interpreter."""
+
+</span><span style="color: blue; font-weight: bold">def </span>error<span style="font-weight: bold">(</span>message<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Raise a Logo error as a Python exception."""
+    </span><span style="color: blue; font-weight: bold">raise </span>LogoError<span style="font-weight: bold">(</span>message<span style="font-weight: bold">)
+
+</span><span style="color: blue; font-weight: bold">def </span>interpret_line<span style="font-weight: bold">(</span>line<span style="font-weight: bold">, </span>env<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Interpret a single line in the read-eval loop."""
+    </span>result <span style="font-weight: bold">= </span>eval_line<span style="font-weight: bold">(</span>Buffer<span style="font-weight: bold">(</span>parse_line<span style="font-weight: bold">(</span>line<span style="font-weight: bold">)), </span>env<span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">if </span>result <span style="color: blue; font-weight: bold">is not </span><span style="color: blue">None</span><span style="font-weight: bold">:
+        </span>error<span style="font-weight: bold">(</span><span style="color: red">'You do not say what to do with {0}.'</span><span style="font-weight: bold">.</span>format<span style="font-weight: bold">(</span>result<span style="font-weight: bold">))
+    
+</span><span style="color: blue; font-weight: bold">def </span>read_eval_loop<span style="font-weight: bold">(</span>env<span style="font-weight: bold">, </span>get_next_line<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Run a read-eval loop for Logo.
+
+    get_next_line: a zero-argument fn that returns a line of Logo code (str).
+    """
+    </span><span style="color: blue; font-weight: bold">while True</span><span style="font-weight: bold">:
+        </span><span style="color: blue; font-weight: bold">try</span><span style="font-weight: bold">:
+            </span>line <span style="font-weight: bold">= </span>get_next_line<span style="font-weight: bold">()
+            </span><span style="color: blue; font-weight: bold">if </span>line<span style="font-weight: bold">.</span>lower<span style="font-weight: bold">() </span><span style="color: blue; font-weight: bold">in </span><span style="font-weight: bold">{</span><span style="color: red">'quit'</span><span style="font-weight: bold">, </span><span style="color: red">'exit'</span><span style="font-weight: bold">, </span><span style="color: red">'bye'</span><span style="font-weight: bold">}:
+                </span><span style="color: blue; font-weight: bold">raise </span>EOFError
+            interpret_line<span style="font-weight: bold">(</span>line<span style="font-weight: bold">, </span>env<span style="font-weight: bold">)
+        </span><span style="color: blue; font-weight: bold">except </span><span style="font-weight: bold">(</span>LogoError<span style="font-weight: bold">, </span>SyntaxError<span style="font-weight: bold">) </span>as err<span style="font-weight: bold">:
+            </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span>err<span style="font-weight: bold">)
+        </span><span style="color: blue; font-weight: bold">except </span><span style="font-weight: bold">(</span>KeyboardInterrupt<span style="font-weight: bold">, </span>EOFError<span style="font-weight: bold">):
+            </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span><span style="color: red">'Goodbye!'</span><span style="font-weight: bold">)
+            </span><span style="color: blue; font-weight: bold">return
+
+def </span>strip_comment<span style="font-weight: bold">(</span>line<span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Return the prefix of line preceding the first semicolon."""
+    </span><span style="color: blue; font-weight: bold">return </span>line<span style="font-weight: bold">.</span>split<span style="font-weight: bold">(</span><span style="color: red">';'</span><span style="font-weight: bold">, </span><span style="color: red">1</span><span style="font-weight: bold">)[</span><span style="color: red">0</span><span style="font-weight: bold">]
+
+</span><span style="color: blue; font-weight: bold">def </span>prompt_for_line<span style="font-weight: bold">(</span>prompt<span style="font-weight: bold">=</span><span style="color: red">'?'</span><span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Read a line interactively from the user (via standard input)."""
+    </span><span style="color: blue; font-weight: bold">return </span>strip_comment<span style="font-weight: bold">(</span>input<span style="font-weight: bold">(</span>prompt <span style="font-weight: bold">+ </span><span style="color: red">' '</span><span style="font-weight: bold">))
+
+</span><span style="color: blue; font-weight: bold">def </span>generate_lines<span style="font-weight: bold">(</span>src<span style="font-weight: bold">, </span>prompt<span style="font-weight: bold">=</span><span style="color: red">'?'</span><span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Return a function that returns lines from src, a list of strings."""
+    </span><span style="color: blue; font-weight: bold">def </span>pop_line<span style="font-weight: bold">():
+        </span><span style="color: blue; font-weight: bold">if not </span>src<span style="font-weight: bold">:
+            </span><span style="color: blue; font-weight: bold">raise </span>EOFError
+        line <span style="font-weight: bold">= </span>src<span style="font-weight: bold">.</span>pop<span style="font-weight: bold">(</span><span style="color: red">0</span><span style="font-weight: bold">)
+        </span><span style="color: blue; font-weight: bold">print</span><span style="font-weight: bold">(</span>prompt<span style="font-weight: bold">, </span>line<span style="font-weight: bold">, </span>end<span style="font-weight: bold">=</span><span style="color: red">''</span><span style="font-weight: bold">)
+        </span><span style="color: blue; font-weight: bold">return </span>strip_comment<span style="font-weight: bold">(</span>line<span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">return </span>pop_line
+
+@main
+<span style="color: blue; font-weight: bold">def </span>run_interpreter<span style="font-weight: bold">(</span>src_file<span style="font-weight: bold">=</span><span style="color: blue">None</span><span style="font-weight: bold">):
+    </span><span style="color: darkred">"""Run a read-eval loop that reads from either a prompt or a file."""
+    </span>get_next_line <span style="font-weight: bold">= </span>prompt_for_line
+    get_continuation_line <span style="font-weight: bold">= </span><span style="color: blue; font-weight: bold">lambda</span><span style="font-weight: bold">: </span>prompt_for_line<span style="font-weight: bold">(</span><span style="color: red">'&gt;'</span><span style="font-weight: bold">)
+    </span><span style="color: blue; font-weight: bold">if </span>src_file <span style="font-weight: bold">!= </span><span style="color: blue">None</span><span style="font-weight: bold">:
+        </span>src <span style="font-weight: bold">= </span>open<span style="font-weight: bold">(</span>src_file<span style="font-weight: bold">).</span>readlines<span style="font-weight: bold">()
+        </span>get_next_line <span style="font-weight: bold">= </span>generate_lines<span style="font-weight: bold">(</span>src<span style="font-weight: bold">)
+        </span>get_continuation_line <span style="font-weight: bold">= </span>generate_lines<span style="font-weight: bold">(</span>src<span style="font-weight: bold">, </span>prompt<span style="font-weight: bold">=</span><span style="color: red">'&gt;'</span><span style="font-weight: bold">)
+    </span>env <span style="font-weight: bold">= </span>Environment<span style="font-weight: bold">(</span>get_continuation_line<span style="font-weight: bold">)
+    </span>read_eval_loop<span style="font-weight: bold">(</span>env<span style="font-weight: bold">, </span>get_next_line<span style="font-weight: bold">)
+</span>
+</pre>
+</body>
+</html>
