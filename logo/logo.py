@@ -203,28 +203,33 @@ def logo_type(x, top_level=True):
     >>> eval_line(line, Environment())
     a [b c] d
     """
-    def print_inbetween(current, next):
-        if type(current) != list and type(next) == list:
-            print(" [", end = '')
-        if type(current) == list and type(next) == list:
-            print("] [", end = '')
-        if type(current) == list and type(next) != list:
-            print("] ", end = '')
-        else:
-            print(" ", end = '')
-
     if type(x) != list:
         print(x, end='') # The end argument prevents starting a new line
     else:
-        if top_level is False:
-            for curr, next in x:
-                logo_type(curr, False)
-                print_inbetween(curr, next)
-        else:
-            for i in x:
-                logo_type(i, False)
-                print_inbetween(curr, next)
-
+        pass
+##        if top_level == False:
+##            for i in range(len(x)):
+##                logo_type(x[i], False)
+##                if i < len(x) - 1:
+##                    print_inbetween(x[i], x[i+1])
+##                #elif 
+##                #    print_inbetween(x[i], -1)
+##        else:
+##            for i in range(len(x)):
+##                logo_type(x[i], False)
+##                if i < len(x) - 1:
+##                    print_inbetween(x[i], x[i+1])
+             
+def print_inbetween(current, next):
+    if type(current) != list and type(next) == list:
+        print(" [", end = '')
+    elif type(current) == list and type(next) != list:
+        print("] ", end = '')
+    elif type(current) == list and next == -1:
+        print("]", end = '')
+    else:
+        print(" ", end = '')
+        
 def logo_run(exp, env):
     """Apply the "run" primitive."""
     if type(exp) != list:
