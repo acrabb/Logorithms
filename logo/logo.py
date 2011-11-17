@@ -80,6 +80,7 @@ def logo_eval(line, env):
 def apply_procedure(proc, line, env):
     """Evaluate the procedure named by token on the args in line."""
     args = collect_args(proc.arg_count, line, env)
+    # MODIFIED
     if proc.needs_env == True:
         args.append(env)
     if len(args) < proc.arg_count:
@@ -103,9 +104,10 @@ def collect_args(n, line, env):
     args = []
     m = n
     while m > 0:
+        # print(line.current)
         if line.current == None:
             error('Found only {0} of {1} args at {2}'.format(len(args), n, line))
-        args += logo_eval(line, env)
+        args.append(logo_eval(line, env))
         m -= 1
     return args
     # return [line.pop()] # Only collects 1 arg
@@ -127,6 +129,7 @@ def logo_apply(proc, args):
             error(e) # Convert any error into a LogoError
     else:
         "*** YOUR CODE HERE ***"
+        print("MEHHHH")
         raise NotImplementedError
 
 def isoutput(result):
@@ -391,9 +394,11 @@ class Environment(object):
         >>> env.lookup_variable('z')
         5
         """
-        "*** YOUR CODE HERE ***"
-        
+        # "*** YOUR CODE HERE ***"
+        # DONE
+        self._frames[0][symbol] = val
 
+        
     def __str__(self):
         return ';'.join([str(f) for f in self._frames])
 
@@ -480,6 +485,10 @@ def generate_lines(src, prompt='?'):
         print(prompt, line, end='')
         return strip_comment(line)
     return pop_line
+
+
+if __name__ == "__main__":
+    interact()
 
 @main
 def run_interpreter(src_file=None):
