@@ -80,6 +80,8 @@ def logo_eval(line, env):
 def apply_procedure(proc, line, env):
     """Evaluate the procedure named by token on the args in line."""
     args = collect_args(proc.arg_count, line, env)
+    if proc.needs_env == True:
+        args.append(env)
     if len(args) < proc.arg_count:
         error('Not enough args to {0}'.format(proc.name))
     return logo_apply(proc, args)
@@ -202,21 +204,27 @@ def logo_type(x, top_level=True):
     >>> eval_line(line, Environment())
     a [b c] d
     """
+    def print_inbetween(current, next):
+        if type(current) != list and type(next) == list:
+            print(" [", end = '')
+        if type(current) == list and type(next) == list:
+            print("] [", end = '')
+        if type(current) == list and type(next) != list:
+            print("] ", end = '')
+        else:
+            print(" ", end = '')
+
     if type(x) != list:
         print(x, end='') # The end argument prevents starting a new line
     else:
         if top_level is False:
-            print('[', end='')
-            logo_type(x[0], False)
-            print(" ", end = '')
-            for i in x[1:]:
-                logo_type(i, False)
-            print(']', end='')
+            for curr, next in x:
+                logo_type(curr, False)
+                print_inbetween(curr, next)
         else:
-            logo_type(x[0], False)
-            print(" ", end='')
-            for i in x[1:]:
+            for i in x:
                 logo_type(i, False)
+                print_inbetween(curr, next)
 
 def logo_run(exp, env):
     """Apply the "run" primitive."""
@@ -384,7 +392,7 @@ class Environment(object):
         5
         """
         "*** YOUR CODE HERE ***"
-        raise NotImplementedError
+        
 
     def __str__(self):
         return ';'.join([str(f) for f in self._frames])
