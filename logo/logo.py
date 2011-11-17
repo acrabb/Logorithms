@@ -166,7 +166,11 @@ def isquoted(exp):
     >>> isquoted([1, 2])
     True
     """
-    "*** YOUR CODE HERE ***"
+    t = type(exp)
+    if t is str:
+        return True if exp[0] == '"' else False
+    if t is list:
+        return True
     return False # Does not detect quotation
 
 def text_of_quotation(exp):
@@ -177,8 +181,12 @@ def text_of_quotation(exp):
     >>> text_of_quotation([1, 2])
     [1, 2]
     """
-    "*** YOUR CODE HERE ***"
-    raise NotImplementedError
+    t = type(exp)
+    if t is str:
+        if exp[0] == '"':
+            return exp[1:]
+    if t is list:
+        return exp
 
 
 ########################
@@ -197,8 +205,18 @@ def logo_type(x, top_level=True):
     if type(x) != list:
         print(x, end='') # The end argument prevents starting a new line
     else:
-        "*** YOUR CODE HERE ***"
-        raise NotImplementedError
+        if top_level is False:
+            print('[', end='')
+            logo_type(x[0], False)
+            print(" ", end = '')
+            for i in x[1:]:
+                logo_type(i, False)
+            print(']', end='')
+        else:
+            logo_type(x[0], False)
+            print(" ", end='')
+            for i in x[1:]:
+                logo_type(i, False)
 
 def logo_run(exp, env):
     """Apply the "run" primitive."""
