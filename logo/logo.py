@@ -243,17 +243,54 @@ def logo_run(exp, env):
 def logo_if(val, exp, env):
     """Apply the "if" primitive, which takes a boolean and a list.
     
-    ***YOUR DOCTEST HERE***
+    # ***YOUR DOCTEST HERE***
+    >>> env = Environment(None)
+    >>> line = Buffer(parse_line('if True [print 3]'))
+    >>> logo_eval(line, env)
+    3
+
+    >>> line = Buffer(parse_line('if equalp 3 sum 1 2 [print sum 20 10]'))
+    >>> logo_eval(line, env)
+    30
+
     """
-    "*** YOUR CODE HERE ***"
-    raise NotImplementedError
+    # "*** YOUR CODE HERE ***"
+    # DONE
+    if val == 'True':
+        return logo_run(exp, env)
+    elif val == 'False':
+        return None
+    else:
+        error("""First argument to "if" is not True or False: """ + val)
+    # raise NotImplementedError
 
 def logo_ifelse(val, true_exp, false_exp, env):
     """Apply the "ifelse" primitive, which takes a boolean and two lists.
     
-    ***YOUR DOCTEST HERE***
+    # ***YOUR DOCTEST HERE***
+
+    >>> env = Environment(None)
+    >>> line = Buffer(parse_line('ifelse lessp 2 1 [print "Yes] [print "No]'))
+    >>> logo_eval(line, env)
+    No
+
+    >>> line = Buffer(parse_line('ifelse 1 2 3'))
+    >>> logo_eval(line, env)
+    Traceback (most recent call last):
+        ...
+    logo.LogoError: First argument to "ifelse" is not True or False: 1
+    
+
     """
-    "*** YOUR CODE HERE ***"
+    # "*** YOUR CODE HERE ***"
+    # DONE
+    if val == 'True':
+        return logo_run(true_exp, env)
+    elif val == 'False':
+        return logo_run(false_exp, env)
+    else:
+        error("""First argument to "ifelse" is not True or False: """ + val)
+
     raise NotImplementedError
 
 def logo_make(symbol, val, env):
