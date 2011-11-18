@@ -210,29 +210,19 @@ def logo_type(x, top_level=True):
     if type(x) != list:
         print(x, end='') # The end argument prevents starting a new line
     else:
-        pass
-##        if top_level == False:
-##            for i in range(len(x)):
-##                logo_type(x[i], False)
-##                if i < len(x) - 1:
-##                    print_inbetween(x[i], x[i+1])
-##                #elif 
-##                #    print_inbetween(x[i], -1)
-##        else:
-##            for i in range(len(x)):
-##                logo_type(x[i], False)
-##                if i < len(x) - 1:
-##                    print_inbetween(x[i], x[i+1])
-             
-def print_inbetween(current, next):
-    if type(current) != list and type(next) == list:
-        print(" [", end = '')
-    elif type(current) == list and type(next) != list:
-        print("] ", end = '')
-    elif type(current) == list and next == -1:
-        print("]", end = '')
-    else:
-        print(" ", end = '')
+        if top_level == False:
+            print('[', end='')
+            for i in range(len(x)):
+                logo_type(x[i], False)
+                if i != len(x)-1:
+                    print(" ", end='')
+            print(']', end='')
+        else:
+            for i in range(len(x)):
+                logo_type(x[i], False)
+                if i != len(x)-1:
+                    print(" ", end='')
+ 
         
 def logo_run(exp, env):
     """Apply the "run" primitive."""
