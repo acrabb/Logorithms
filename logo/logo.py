@@ -31,9 +31,9 @@ def eval_line(line, env):
     """
     # "*** YOUR CODE HERE ***"
     # DONE
-    
-    v = logo_eval(line, env)
-    return v if v != None or line.current == None else eval_line(line, env)
+    if line.current != None:
+        v = logo_eval(line, env)
+        return v if v != None or line.current == None else eval_line(line, env)
     # return logo_eval(line, env) # Does not handle multiple-expression lines
 
 def logo_eval(line, env):
