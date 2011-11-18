@@ -128,9 +128,25 @@ def logo_apply(proc, args):
         except Exception as e:
             error(e) # Convert any error into a LogoError
     else:
-        "*** YOUR CODE HERE ***"
-        print("MEHHHH")
-        raise NotImplementedError
+        # "*** YOUR CODE HERE ***"
+        # DONE
+        env = args.pop()
+        frame = {fp:a for (fp, a) in zip(proc.formal_params, args)}
+        
+        env.push_frame(frame)
+
+        for line in proc.body:
+            val = eval_line(Buffer(line), env)
+            if val != None:
+                if type(val) == tuple and val[0] == 'OUTPUT':
+                    env.pop_frame()
+                    return val[1]
+                else:
+                    env.pop_frame()
+                    error("You don't say what to do with the result " + val)
+
+        env.pop_frame()
+        # raise NotImplementedError
 
 def isoutput(result):
     """Return whether result is a two-element tuple starting with 'OUTPUT'."""
@@ -281,7 +297,7 @@ def logo_ifelse(val, true_exp, false_exp, env):
     else:
         error("""First argument to "ifelse" is not True or False: """ + val)
 
-    raise NotImplementedError
+    # raise NotImplementedError
 
 def logo_make(symbol, val, env):
     """Apply the Logo make primitive, which binds a name to a value.
@@ -404,8 +420,14 @@ class Environment(object):
             ...
         logo.LogoError: z has no value
         """
-        "*** YOUR CODE HERE ***"
-        return self._frames[0][symbol] # Does not scope
+        # "*** YOUR CODE HERE ***"
+
+        for i in reversed(self._frames):
+            if (symbol in i) == True:
+                return i[symbol]
+        error(symbol + ' has no value')
+
+        # return self._frames[0][symbol] # Does not scope
 
     def set_variable_value(self, symbol, val):
         """Set the value of a variable in the innermost frame where it's defined,
@@ -428,8 +450,15 @@ class Environment(object):
         """
         # "*** YOUR CODE HERE ***"
         # DONE
-        self._frames[0][symbol] = val
-
+        # DONE
+        
+        for i in reversed(self._frames):
+            # print(i)
+            if (symbol in i) == True or i is (self._frames[0]):
+                i[symbol] = val
+                break
+        
+        #self._frames[0][symbol] = val
         
     def __str__(self):
         return ';'.join([str(f) for f in self._frames])
@@ -462,8 +491,24 @@ def eval_definition(line, env):
     """
     procedure_name = line.pop()
     next_line = lambda: parse_line(env.get_continuation_line())
-    "*** YOUR CODE HERE ***"
-    raise NotImplementedError
+    # "*** YOUR CODE HERE ***"
+    # DONE
+    params = []
+    while line.current != None:
+
+        params.append(line.pop().lstrip(':'))
+    
+    body = []
+    current_line = next_line()
+    while current_line != ['end']:
+        # print(current_line)
+        body.append(current_line)
+        current_line = next_line()
+
+    p = Procedure(procedure_name, len(params), body, formal_params=params, needs_env=True)
+    env.procedures[procedure_name] = p
+
+    # raise NotImplementedError
 
 
 ###############
