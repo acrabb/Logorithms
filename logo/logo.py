@@ -134,17 +134,14 @@ def logo_apply(proc, args):
         frame = {fp:a for (fp, a) in zip(proc.formal_params, args)}
         
         env.push_frame(frame)
-
         for line in proc.body:
             val = eval_line(Buffer(line), env)
             if val != None:
+                env.pop_frame()
                 if type(val) == tuple and val[0] == 'OUTPUT':
-                    env.pop_frame()
                     return val[1]
                 else:
-                    env.pop_frame()
-                    error("You don't say what to do with the result " + val)
-
+                    error("You do not say what to do with " + str(val))
         env.pop_frame()
         # raise NotImplementedError
 
@@ -495,7 +492,6 @@ def eval_definition(line, env):
     # DONE
     params = []
     while line.current != None:
-
         params.append(line.pop().lstrip(':'))
     
     body = []
