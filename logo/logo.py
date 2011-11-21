@@ -36,23 +36,15 @@ def eval_line(line, env):
         return v if v != None or line.current == None else eval_line(line, env)
     # return logo_eval(line, env) # Does not handle multiple-expression lines
 
-def logo_eval(line, env):
-    """Evaluate the first expression in a line.
-
-    >>> line = Buffer(parse_line('sum 1 (sum 2 3)'))
-    >>> eval_line(line, Environment())
-    '6'
-    >>> line = Buffer(parse_line('sum 1 (sum 2 3 4)'))
-    >>> eval_line(line, Environment())
-    Traceback (most recent call last):
-        ...
-    logo.LogoError: Expected ")" at [ sum, 1, (, sum, 2, 3 >> 4, ) ]
-    """
+def eval_noninfix(line, env):
+    # Extra Credit 1
+    """Evaluate the first non-infix expression in a line."""
+    
     if line.current == None:
         error('Ran out of input at {0}'.format(line))
     elif line.current == ')':
         error('Unexpected ")" at {0}'.format(line))
-
+    
     token = line.pop()
     if isprimitive(token):
         return token
@@ -65,9 +57,10 @@ def logo_eval(line, env):
     elif token == '(':
         # "*** YOUR CODE HERE ***"
         # DONE
-        v = logo_eval(line, env)
+        v = eval_line(line, env)
         if line.current == ')':
             line.pop()
+            # print('POPPED')
             return v
         error('Expected ")" at {0}'.format(line))
         # raise NotImplementedError
@@ -76,6 +69,105 @@ def logo_eval(line, env):
         if not procedure:
             error('I do not know how to {0}.'.format(token))
         return apply_procedure(procedure, line, env)
+
+def eval_precedence(line, env, prevOp):
+    arg0 = eval_noninfix(line, env)
+
+    nextOp = line.current
+    # if nextOp != None and type(nextOp)!=list:
+    if type(nextOp)!=list:
+
+        while nextOp in INFIX_SYMBOLS:
+            if get_precedence(prevOp) >= get_precedence(nextOp):
+                return arg0
+            else:
+                nextOp = line.pop()
+                arg1 = eval_noninfix(line, env)
+                # print(arg0, nextOp, arg1)
+                procedure = env.procedures.get(INFIX_SYMBOLS[nextOp], None)
+                if not procedure:
+                    error('I do not know how to {0}.'.format(token))
+                arg0 = logo_apply(procedure, [arg0, arg1])
+            nextOp = line.current
+    return arg0
+
+def get_precedence(op):
+    """Return the precedence (1-3) of op
+    >>> get_precedence('=')
+    1
+    >>> get_precedence('+')
+    2
+    >>> get_precedence('*')
+    3
+
+    """
+    layer = 0
+    # if op == '(':
+    #     layer = 1
+    # else:
+    if op not in INFIX_SYMBOLS:
+        error("Invalid operator: " + str(op))
+    for group in INFIX_GROUPS:
+        layer += 1
+        if op in group:
+            break
+    return layer
+
+
+def logo_eval(line, env):
+    """Evaluate the first expression in a line.
+
+    >>> line = Buffer(parse_line('sum 1 (sum 2 3)'))
+    >>> eval_line(line, Environment())
+    '6'
+    >>> line = Buffer(parse_line('sum 1 (sum 2 3 4)'))
+    >>> eval_line(line, Environment())
+    Traceback (most recent call last):
+        ...
+    logo.LogoError: Expected ")" at [ sum, 1, (, sum, 2, 3 >> 4, ) ]
+    """
+    # Extra Credit 1 & 2
+
+    arg0 = eval_noninfix(line, env)
+    # print('chk curr', line.current)
+
+    if type(line.current) != list:  # NEEDED FOR IF/IFELSE STATEMENTS
+        while line.current in INFIX_SYMBOLS.keys():
+            token = line.pop()
+            # arg1 = eval_noninfix(line, env)
+            arg1 = eval_precedence(line, env, token)    #EC 2
+            procedure = env.procedures.get(INFIX_SYMBOLS[token], None)
+
+            if not procedure:
+                error('I do not know how to {0}.'.format(token))
+            arg0 = logo_apply(procedure, [arg0, arg1])
+            if type(line.current) == list:  # NEEDED FOR IF/IFELSE STATEMENTS
+                break                       # IS THERE A CLEANER FIX FOR THIS???
+                
+    return arg0
+
+    # if isprimitive(token):
+    #     return token
+    # elif isvariable(token):
+    #     return env.lookup_variable(variable_name(token))
+    # elif isdefinition(token):
+    #     return eval_definition(line, env)
+    # elif isquoted(token):
+    #     return text_of_quotation(token)
+    # elif token == '(':
+    #     # "*** YOUR CODE HERE ***"
+    #     # DONE
+    #     v = logo_eval(line, env)
+    #     if line.current == ')':
+    #         line.pop()
+    #         return v
+    #     error('Expected ")" at {0}'.format(line))
+    #     # raise NotImplementedError
+    # else:
+    #     procedure = env.procedures.get(token, None)
+    #     if not procedure:
+    #         error('I do not know how to {0}.'.format(token))
+    #     return apply_procedure(procedure, line, env)
 
 def apply_procedure(proc, line, env):
     """Evaluate the procedure named by token on the args in line."""
@@ -497,7 +589,6 @@ def eval_definition(line, env):
     body = []
     current_line = next_line()
     while current_line != ['end']:
-        # print(current_line)
         body.append(current_line)
         current_line = next_line()
 
