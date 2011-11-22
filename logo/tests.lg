@@ -226,7 +226,10 @@ show apply_2 "word "now "here
 ;; filter returns a subset of :s containing elements for which :f outputs True
 to filter :f :s
   ; *** YOUR CODE HERE ***
-end
+  ; DONE
+  ifelse empty? :s [output []] [ifelse (apply_1 :f first :s)  [output fput first :s filter :f bf :s] [output filter :f bf :s]]
+  end
+
 show filter "big [1 10 3 8 4 7]
 ; expect [10 8 7]
 
@@ -235,10 +238,13 @@ show filter "big [1 10 3 8 4 7]
 ;; At most :max_coins total coins can be used.
 to count_change :total :denoms :max_coins
   ; *** YOUR CODE HERE ***
-end
-make "us_coins [50 25 10 5 1]
-print count_change 20 :us_coins 18
-; expect 8
+  ; DONE
+
+  if (equal? :total 0) [output 1]
+  if (or (or (less? :total 0) (equal? (len :denoms) 0)) (equal? :max_coins 0)) [output 0]
+
+  output sum (count_change :total (bf :denoms) :max_coins) (count_change (difference :total (first :denoms)) :denoms (difference :max_coins 1))
+  end
 
 
 ;; reduce applies two-argument :f cumulatively for items in :s
@@ -263,8 +269,20 @@ print count_partitions 5 3
 ;; list_partitions lists all partitions of :total using at most :max_pieces
 to list_partitions :total :max_pieces :max_value
   ; *** YOUR CODE HERE ***
+  ; DONE
+  output partition :total :max_pieces :max_value []
 end
+
+to partition :total :max_pieces :max_value :list
+  if equal? :total 0 [output fput :list []]
+  if less? :total 0 [output []]
+  if equal? :max_value 0 [output []]
+  if equal? :max_pieces 0 [output []]
+  output sentence partition difference :total :max_value difference :max_pieces 1 :max_value sentence :list :max_value partition :total :max_pieces difference :max_value 1 :list
+end
+
 show list_partitions 5 2 4
 ; expect [[4 1] [3 2]]
+
 show list_partitions 7 3 5
 ; expect [[5 2] [5 1 1] [4 3] [4 2 1] [3 3 1] [3 2 2]]
