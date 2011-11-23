@@ -251,6 +251,9 @@ to count_change :total :denoms :max_coins
 ;; The starting value :n is the first argument to :f
 to reduce :f :s :n
   ; *** YOUR CODE HERE ***
+  ; DONE
+  if empty? :s [output :n]
+  output reduce :f butfirst :s apply_2 :f :n first :s
 end
 print reduce "sum [1 2 3 4 5] 0
 ; expect 15
@@ -260,6 +263,11 @@ print reduce "sum [1 2 3 4 5] 0
 ;; Each partition must be at most :max_value
 to count_partitions :total :max_value
   ; *** YOUR CODE HERE ***
+  ; DONE
+  if equal? :total 0 [output 1]
+  if less? :total 0 [output 0]
+  if equal? :max_value 0 [output 0]
+  output sum count_partitions difference :total :max_value :max_value count_partitions :total difference :max_value 1
 end
 print count_partitions 5 3
 ; expect 5
